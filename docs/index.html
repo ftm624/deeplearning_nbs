@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+
+  <title>index</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <!-- Custom stylesheet, it must be in the same directory as the html file -->
+  <link rel="stylesheet" href="styles/custom.css">
+  <link rel="stylesheet" href="styles/primary.css">
+
+  <!-- Loading mathjax macro -->
+  <!-- Load mathjax -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
+  <!-- MathJax configuration -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            processEscapes: true,
+            processEnvironments: true
+        },
+        // Center justify equations in code and markdown cells. Elsewhere
+        // we use CSS to left justify single line equations in code cells.
+        displayAlign: 'center',
+        "HTML-CSS": {
+            styles: {'.MathJax_Display': {"margin": 0}},
+            linebreaks: { automatic: true }
+        }
+    });
+    </script>
+  <!-- End of mathjax configuration -->
+</head>
+
+<body>
+  <div tabindex="-1" id="notebook" class="border-box-sizing">
+    <div class="container" id="notebook-container">
+
+      <div class="cell border-box-sizing text_cell rendered">
+        <div class="prompt input_prompt">
+        </div>
+        <div class="inner_cell">
+          <div class="text_cell_render border-box-sizing rendered_html">
+            <h1 id="Deep-Learning-Notebooks">Deep Learning Notebooks<a class="anchor-link"
+                href="#Deep-Learning-Notebooks">&#182;</a></h1>
+            <blockquote>
+              <p>An exploration of deep learning from the ground up.</p>
+            </blockquote>
+
+          </div>
+        </div>
+      </div>
+      <div class="cell border-box-sizing text_cell rendered">
+        <div class="prompt input_prompt">
+        </div>
+        <div class="inner_cell">
+
+          <div class="text_cell_render border-box-sizing rendered_html">
+            <p>These notebooks are loosely based on the Fastai course <a href="https://course.fast.ai/part2"> Part 2:
+                Deep Learning from the Foundations </a>. They follow the general order of that course and expand upon
+              cencepts and code I found to be particularly interesting.</p>
+            <p>This documentation is not meant to build a functional library for deep learning. Instead it is an attempt
+              at "literate programming" (Knuth, 1983).</p>
+            <p>Contents:</p>
+            <ul>
+
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_01">Tensors and Matrix Multiplication</a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_02">Fully Connected Layers</a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_03">Mini-Batch Training </a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_04">DataBunchs, Learners, and Runner </a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_05">Recorder and Annealing </a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_06">Runner v2.0 </a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/07">CUDA, CNN with Hooks </a></li>
+              <li>BatchNorm</li>
+              <li>LSUV</li>
+              <li>DataBlock API</li>
+              <li>Optimizers</li>
+              <li>Learner v2.0</li>
+              <li>Data Augmentation</li>
+              <li>MixUp Label Smoothing</li>
+              <li>fp 16</li>
+              <li>Transfer Learning</li>
+              <li>Text</li>
+            </ul>
+            <p>Appendix:</p>
+            <ul>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_a1">Exports </a></li>
+              <li><a href="http://jakepalmert.com/fastai_nbs/fa_07a">Convolutional Layers</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+
+
+
+</html>
