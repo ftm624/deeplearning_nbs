@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>02_fully_connected</title>
+<title>01a_weight_init</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13092,16 +13092,8 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Fully-Connected">Fully Connected<a class="anchor-link" href="#Fully-Connected">&#182;</a></h1><blockquote><p>Forward and backward passes</p>
+<h1 id="Weight-Initialization">Weight Initialization<a class="anchor-link" href="#Weight-Initialization">&#182;</a></h1><blockquote><p>All you need is a good init</p>
 </blockquote>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>With matrix multiplication out of the way we can now get to work constructing a basic neural network that can perform a forward and backward pass.</p>
 
 </div>
 </div>
@@ -13112,7 +13104,20 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="kn">from</span> <span class="nn">exp.nb_01a</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">exp.nb_01</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">fastai</span> <span class="kn">import</span> <span class="n">datasets</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">init</span>
+
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 
     </div>
@@ -13130,7 +13135,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now grab the data and convert into tensors</p>
+<p>Create a few helper functions to download the data and then normalize it.</p>
 
 </div>
 </div>
@@ -13140,87 +13145,14 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">get_data</span><span class="p">():</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">download_data</span><span class="p">(</span><span class="s1">&#39;http://deeplearning.net/data/mnist/mnist.pkl&#39;</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;.gz&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="p">((</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">),</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="p">(</span><span class="n">x_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span><span class="n">x_valid</span><span class="p">,</span><span class="n">y_valid</span><span class="p">))</span>
 
-<span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">x_train</span><span class="o">.</span><span class="n">std</span><span class="p">();</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span>
-
-<span class="n">x_train</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span><span class="p">)</span>
-<span class="n">x_valid</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span><span class="p">)</span>
-
-<span class="n">get_stats</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[3]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&#39;Mean: -6.259815563680604e-06  STD: 1.0&#39;</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span>
-<span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">c</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[4]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>(50000, 784, tensor(10))</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[5]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nh</span> <span class="o">=</span> <span class="mi">50</span> <span class="c1"># number of hidden units</span>
-
-<span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span>
-<span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
-<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">s</span>
 </pre></div>
 
     </div>
@@ -13231,7 +13163,80 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Basic-Model">Basic Model<a class="anchor-link" href="#Basic-Model">&#182;</a></h2>
+<p>Now grab the data and convert into tensors</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Normalizing-Data">Normalizing Data<a class="anchor-link" href="#Normalizing-Data">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To normalize our training and validation sets we use the statistics from the training set. This is important to note.</p>
+<p>The model is going to 'learn' from the training data. Whatever the models sees during this learning phase is what becomes its normal or base line.</p>
+<p>The validation set could contain outliers or examples that are not in the training set. And since by definition it is smaller than the training set, these outliers might skew validation set if it was normalized using its own mean and std.</p>
+<p>Then when the model went to predict the validation set, and give us a sense of how it is generalizing, it would be systematically wrong.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">x_train</span><span class="o">.</span><span class="n">std</span><span class="p">();</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[5]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(tensor(0.1304), tensor(0.3073))</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Before normalizing the mean is around .13 and the std is .3</p>
+
 </div>
 </div>
 </div>
@@ -13240,7 +13245,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">relu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span><span class="p">)</span>
+<span class="n">x_valid</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_std</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13248,12 +13254,21 @@ div#notebook {
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After normalizing our training mean is nearly zero and the standard deviation is close to 1.</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="o">/</span><span class="n">m</span> <span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="n">a</span><span class="p">):</span> <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s2">  STD: </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 
     </div>
@@ -13266,7 +13281,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">w2</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13285,7 +13300,7 @@ div#notebook {
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>(torch.Size([784, 50]), torch.Size([50, 1]))</pre>
+<pre>&#39;Mean: -6.259815563680604e-06  STD: 1.0&#39;</pre>
 </div>
 
 </div>
@@ -13293,36 +13308,25 @@ div#notebook {
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is a simple test of whether a tensor is near zero using <code>assert</code>: if its true do nothing else throw error and return error message.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">test_near_zero</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-02</span><span class="p">):</span> <span class="k">assert</span> <span class="n">a</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">&lt;</span><span class="n">tol</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Near zero: </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[9]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>(784, 50)</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13332,11 +13336,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">xb</span><span class="p">):</span>
-    <span class="n">l1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">xb</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
-    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
-    <span class="n">l3</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">l3</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near_zero</span><span class="p">(</span><span class="n">x_train</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">test_near_zero</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x_train</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
 </pre></div>
 
     </div>
@@ -13349,7 +13350,9 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">timeit</span> -n 10 _=model(x_valid)
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span>
+<span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">c</span>
 </pre></div>
 
     </div>
@@ -13362,13 +13365,15 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[11]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>4.58 ms ± 333 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(50000, 784, tensor(10))</pre>
 </div>
+
 </div>
 
 </div>
@@ -13378,10 +13383,9 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Loss-Function:-Becoming-Less-Wrong">Loss Function: Becoming Less Wrong<a class="anchor-link" href="#Loss-Function:-Becoming-Less-Wrong">&#182;</a></h2><p>The basic model we've built is capable of making a forward pass - it takes an input, does some calculations on it and outputs a single value.</p>
-<p>We now need some way to determine how wrong that prediction is from the correct answer and adjust the model's parameters accordingly.</p>
-<p>Determining how wrong the prediction is from the correct answer is done with a loss function.</p>
-<p>To start we'll use the <strong>Mean Squared Error</strong> which does not make any sense given our data but it simplifies the gradient calculations in the adjustment ("learning") phase.</p>
+<p>Each layer of our network will be composed of a linear operation followed by a non-linear function.</p>
+<p>One layer feeds into the next. A matrix of inputs is multiplied by a matrix of weights which is then put through a non-linearity and that's essentially what our basic network's "forward pass" will consist of.</p>
+<p>Here is the linear operation:</p>
 
 </div>
 </div>
@@ -13391,30 +13395,11 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="p">(</span><span class="n">x_valid</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lin</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="nd">@w</span> <span class="o">+</span> <span class="n">b</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[12]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>torch.Size([10000, 1])</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13422,7 +13407,20 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We'll reshape this with squeeze to remove that trailing 1.</p>
+<h2 id="The-Importance-of-Good-Weights">The Importance of Good Weights<a class="anchor-link" href="#The-Importance-of-Good-Weights">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After loading the data and defining our linear function we just need some weights or parameters.</p>
+<p>As a start we will randomly initialize the weights and biases and see where that leads us.</p>
+<p>We'll use <code>torch.randn()</code>:</p>
+
+<pre><code>Returns a tensor filled with random numbers from a normal distribution
+with mean `0` and variance `1` (also called the standard normal
+distribution).</code></pre>
 
 </div>
 </div>
@@ -13432,7 +13430,33 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="p">(</span><span class="n">x_valid</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y_valid</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nh</span> <span class="o">=</span> <span class="mi">50</span> <span class="c1"># number of hidden units</span>
+
+<span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Our mean is close to 0 and our std is near 1 - just like our data above.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13445,30 +13469,17 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[13]:</div>
+    <div class="prompt output_prompt">Out[14]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>(torch.Size([10000]), torch.Size([10000]))</pre>
+<pre>&#39;Mean: -0.003507962916046381  STD: 1.006234884262085&#39;</pre>
 </div>
 
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mse</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-</pre></div>
-
-    </div>
 </div>
 </div>
 
@@ -13478,30 +13489,11 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_train</span><span class="o">.</span><span class="n">type</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near_zero</span><span class="p">(</span><span class="n">w1</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">test_near_zero</span><span class="p">(</span><span class="n">w1</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[15]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&#39;torch.LongTensor&#39;</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13511,7 +13503,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_train</span><span class="p">,</span><span class="n">y_valid</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span><span class="n">y_valid</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out1</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13524,20 +13516,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mse</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">out1</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13550,13 +13529,13 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[18]:</div>
+    <div class="prompt output_prompt">Out[17]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>tensor(95.1825)</pre>
+<pre>&#39;Mean: 1.5290924310684204  STD: 28.97806167602539&#39;</pre>
 </div>
 
 </div>
@@ -13568,33 +13547,40 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Backward-pass:-Gradients">Backward pass: Gradients<a class="anchor-link" href="#Backward-pass:-Gradients">&#182;</a></h2>
+<p>After a single linear transformation the STD blows up and that is just after one step - we'll be doing thousands in a normal epoch.</p>
+<p>Why is this happening? What is the problem? And how do we fix it?</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We're ready to use all of the components we've written so far and piece them together into a model.</p>
-<p>The last piece we need to write is the backward pass. We'll do this manually for this first basic model and then we'll rely on Pytorch's autograd.</p>
-<p>We need to imagine our forward pass as simply a function composition:</p>
-<p>
-$$ \hat{y}  = \text{mse}(\text{Linear}(\text{Relu}(\text{Linear}(\text{input})))) $$
-</p><p>With this in mind we can write it as:</p>
-<p>
-$$ \hat{y}  = L(f(u(g(x)))) $$
-</p><p>Then to calculate the backward pass...</p>
+<p>Let's explore what happens when we randomly initialize a matrix of inputs and then repeatedly multiple that matrix by a set of weights.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
 <div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mse_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-    <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">w1</span> <span class="o">@</span> <span class="n">x1</span>
 </pre></div>
 
     </div>
@@ -13607,27 +13593,30 @@ $$ \hat{y}  = L(f(u(g(x)))) $$
 <div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">relu_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span><span class="n">out</span><span class="p">):</span>
-    <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lin_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-    <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span> <span class="o">@</span> <span class="n">w</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
-    <span class="n">w</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">b</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
-    </div>
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[20]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: nan  STD: nan&#39;</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -13635,6 +13624,71 @@ $$ \hat{y}  = L(f(u(g(x)))) $$
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p>This is called an "activation explosion" - after a certain number of operations the activations become NaN.</p>
+<p>Let's look closer...</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span> 
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">w2</span> <span class="o">@</span> <span class="n">x2</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">x2</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">x2</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">!=</span> <span class="n">x2</span><span class="o">.</span><span class="n">std</span><span class="p">():</span> <span class="k">break</span>
+
+<span class="n">i</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>tensor(22.7680)
+tensor(7.6116e+14)
+tensor(2.4270e+28)
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[21]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>28</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>After 28 iterations the std of blows up and we effectively get an overflow error.</p>
+<p>We can also go the other way and get an underflow error if our weights are scaled too small. Then our activations vanish by becoming arbitrarily close to zero.</p>
 
 </div>
 </div>
@@ -13644,23 +13698,10 @@ $$ \hat{y}  = L(f(u(g(x)))) $$
 <div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">forward_and_backward</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input: &quot;</span><span class="p">,</span> <span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">l1</span> <span class="o">=</span> <span class="n">inp</span> <span class="o">@</span> <span class="n">w1</span> <span class="o">+</span> <span class="n">b1</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;l1: &quot;</span><span class="p">,</span> <span class="n">l1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;relu: &quot;</span><span class="p">,</span> <span class="n">l2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">l2</span> <span class="o">@</span> <span class="n">w2</span> <span class="o">+</span> <span class="n">b2</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;out: &quot;</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loss:&quot;</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
-    
-    <span class="c1"># out gets passed as the &quot;inp&quot; to mse_grad along with the target</span>
-    <span class="n">mse_grad</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
-    <span class="c1"># l2 in the in</span>
-    <span class="n">lin_grad</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span>
-    <span class="n">relu_grad</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">)</span>
-    <span class="n">lin_grad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">l1</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x3</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span><span class="mi">512</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.01</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span> <span class="n">x3</span> <span class="o">=</span> <span class="n">w3</span> <span class="o">@</span> <span class="n">x3</span>
 </pre></div>
 
     </div>
@@ -13673,7 +13714,7 @@ $$ \hat{y}  = L(f(u(g(x)))) $$
 <div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">forward_and_backward</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">x3</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13686,17 +13727,15 @@ $$ \hat{y}  = L(f(u(g(x)))) $$
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[23]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Input:  torch.Size([50000, 784])
-l1:  torch.Size([50000, 50])
-relu:  torch.Size([50000, 50])
-out:  torch.Size([50000, 1])
-loss: tensor(95.1825)
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.0  STD: 0.0&#39;</pre>
 </div>
+
 </div>
 
 </div>
@@ -13706,8 +13745,7 @@ loss: tensor(95.1825)
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The goal of backprop is to find the gradients of the loss function with respect to the weights and biases. This gives the model a "direction" to shift its parameters to learn a function with can predict the <code>y</code> based on a given <code>x</code>.</p>
-<p>So the gradient matrix should be the same shape as our weights as we'll be subtracting a fraction of them from the weights.</p>
+<p>What is needed is a method to initialize the weights in relation to the inputs so that our activations do not explode or vanish but stay within a range where we can effectively find the gradient and make our backward pass.</p>
 
 </div>
 </div>
@@ -13717,84 +13755,70 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[24]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">assert</span> <span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">w1</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="n">b1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">w2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nh</span><span class="p">)</span>
+<span class="n">b2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Looks good.</p>
-<p>To test the accuracy of our calculations let's clone the gradients and compare them to Pytorch's gradients.</p>
-<p>First, we'll make a copy of them to compare with later:</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[25]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1g</span> <span class="o">=</span> <span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-<span class="n">w2g</span> <span class="o">=</span> <span class="n">w2</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-<span class="n">b1g</span> <span class="o">=</span> <span class="n">b1</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-<span class="n">b2g</span> <span class="o">=</span> <span class="n">b2</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-<span class="n">ig</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near_zero</span><span class="p">(</span><span class="n">w1</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">test_near_zero</span><span class="p">(</span><span class="n">w1</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Then we'll clone the weights and turn on autograd</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[26]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">xt2</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">w12</span> <span class="o">=</span> <span class="n">w1</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">w22</span> <span class="o">=</span> <span class="n">w2</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">b12</span> <span class="o">=</span> <span class="n">b1</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">b22</span> <span class="o">=</span> <span class="n">b2</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[26]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 9.89467662293464e-05  STD: 0.035732202231884&#39;</pre>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Run the same basic model again with the new weights that have Pytorch's gradients enabled:</p>
+
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
-    <span class="n">l1</span> <span class="o">=</span> <span class="n">inp</span> <span class="o">@</span> <span class="n">w12</span> <span class="o">+</span> <span class="n">b12</span>
-    <span class="n">l2</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">l2</span> <span class="o">@</span> <span class="n">w22</span> <span class="o">+</span> <span class="n">b22</span>
-    <span class="k">return</span> <span class="n">mse</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13807,71 +13831,136 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[28]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">loss</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">xt2</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[28]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: -0.06336553394794464  STD: 0.9936858415603638&#39;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Weight-Initialization-Techniques">Weight Initialization Techniques<a class="anchor-link" href="#Weight-Initialization-Techniques">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Xavier">Xavier<a class="anchor-link" href="#Xavier">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We want to prevent activations from each layer from exploding or vanishing during the forward pass. If either occurs, loss gradients will either be too large or too small to flow backwards and effectively adjust the weights, 
+which may prevent the network from learning anything.</p>
+<p>Another way of saying this is that we want the variance to remain the same as the input passes through the layers</p>
+<p>Xavier initialization was proposed in the paper <a href="http://proceedings.mlr.press/v9/glorot10a.html"> "Understanding the difficulty of training deep feedforward neural networks"</a></p>
+<p>Essentially it scales the weights by dividing them by a "special" number.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[29]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x4</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">w4</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span><span class="mi">512</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+
+<span class="n">get_stats</span><span class="p">(</span><span class="n">x4</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[29]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.01878434233367443  STD: 1.0178866386413574&#39;</pre>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>And it looks like our manual version was successful.</p>
+
+</div>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[30]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near</span><span class="p">(</span><span class="n">w22</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span> <span class="n">w2g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b22</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span> <span class="n">b2g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">w12</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span> <span class="n">w1g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b12</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span> <span class="n">b1g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">xt2</span><span class="o">.</span><span class="n">grad</span><span class="p">,</span> <span class="n">ig</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span> <span class="n">x4</span> <span class="o">=</span> <span class="n">w4</span> <span class="o">@</span> <span class="n">x4</span>
+    
+<span class="n">get_stats</span><span class="p">(</span><span class="n">x4</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[30]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: -0.06969834864139557  STD: 2.3087663650512695&#39;</pre>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Refactor-Model">Refactor Model<a class="anchor-link" href="#Refactor-Model">&#182;</a></h2>
+
 </div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Layers-as-classes">Layers as classes<a class="anchor-link" href="#Layers-as-classes">&#182;</a></h3><p>We'll now refactor the basic model from above by implementing each function as its own class.</p>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Relu and MSE do not have any parameters so they have no need of <code>__init__</code></p>
+<p>Often it works - the mean is near 0 and the STD is near 1. There is some variablity due to the fact that we are randomly generating the weights.</p>
+<p>Now let's focus on the divisor. Its simply a small scalar. But where did 512 come from? And why take the square root?</p>
 
 </div>
 </div>
@@ -13881,87 +13970,165 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[31]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Relu</span><span class="p">():</span>
-
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span><span class="o">-.</span><span class="mi">5</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span> 
-    
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">g</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="mi">1</span>  <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[31]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.044194173824159216</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>By definition our <code>torch.randn()</code> outputs a tensor from a standard normal distribution (mean <code>0</code> and variance <code>1</code>).</p>
+<p>When the mean is 0 the standard deviation ends up being just the square root of the mean of <code>x</code> squared.</p>
+<p>
+$$\sigma = \sqrt{\frac{1}{n}\left[(x_{0}-m)^{2} + (x_{1}-m)^{2} + \cdots + (x_{n-1}-m)^{2}\right]} = \sqrt{ \frac{ \left[(x_{0})^{2} + (x_{1})^{2} + \cdots + (x_{n-1})^{2} \right] }{n} }$$
+</p>
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[32]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Mse</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">targ</span> <span class="o">=</span> <span class="n">targ</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">-</span> <span class="n">targ</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span>
-    
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">targ</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">targ</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mean</span><span class="p">,</span><span class="n">sqr</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+<span class="n">b</span><span class="o">=</span><span class="mi">1000</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">@</span> <span class="n">x</span>
+    <span class="n">mean</span> <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">sqr</span>  <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="n">mean</span><span class="o">/</span><span class="n">b</span><span class="p">,</span><span class="n">sqr</span><span class="o">/</span><span class="n">b</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[32]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.04424850223958492, 511.4945680847168)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If we run this experiment a 1000 times we see that the STD converges to 512 and the mean stays around 0.</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[33]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Lin</span><span class="p">():</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">w</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
-        
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">inp</span><span class="nd">@self</span><span class="o">.</span><span class="n">w</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span>
-    
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">g</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mean</span><span class="p">,</span><span class="n">sqr</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span>
+    <span class="n">mean</span> <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">sqr</span>  <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="n">mean</span><span class="o">/</span><span class="mi">10000</span><span class="p">,</span><span class="n">sqr</span><span class="o">/</span><span class="mi">10000</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[33]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.010322900482478053, 1.0005757403077282)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Then we sum 512 of those things that have a mean of zero, and a mean of squares of 1, so we get something that has a mean of 0, and mean of square of 512, hence <code>math.sqrt(512)</code> being our magic number. If we scale the weights of the matrix <code>a</code> and divide them by this <code>math.sqrt(512)</code>, it will give us a <code>y</code> of scale 1, and repeating the product has many times as we want won't overflow or vanish.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adding-a-non-linearity">Adding a non-linearity<a class="anchor-link" href="#Adding-a-non-linearity">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we need a non-linear activation function otherwise we would be very limited in what types of functions the network could learn.</p>
+<p>We'll use a Rectified Linear Unit (ReLU).</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[34]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Lin</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">),</span> <span class="n">Relu</span><span class="p">(),</span> <span class="n">Lin</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span><span class="n">b2</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">Mse</span><span class="p">()</span>
-        
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span> <span class="n">l</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">relu</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13969,13 +14136,20 @@ loss: tensor(95.1825)
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The full first layer is not a linear transformation followed by a relu:</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[35]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">b1</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">w2</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">b2</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">))</span>
 </pre></div>
 
     </div>
@@ -13988,7 +14162,7 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[36]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> loss = model(x_train, y_train)
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14001,13 +14175,15 @@ loss: tensor(95.1825)
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[36]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 30 ms
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.3658127784729004  STD: 0.5646995306015015&#39;</pre>
 </div>
+
 </div>
 
 </div>
@@ -14017,7 +14193,9 @@ loss: tensor(95.1825)
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The backward pass is very slow relative to the forward. Why??</p>
+<p>After applying the relu the mean has grown to nearly <code>.5</code></p>
+<p>Let's take a closer look at what happens here.</p>
+<p>First, let's look at the how the weights are distributed:</p>
 
 </div>
 </div>
@@ -14027,7 +14205,14 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[37]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> model.backward()
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Weights&#39;</span><span class="p">)</span>
+<span class="c1"># ax2.set_ylabel()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">w1</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+                      <span class="n">showmeans</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">showextrema</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -14043,10 +14228,14 @@ loss: tensor(95.1825)
     <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 2.19 s
-</pre>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
 </div>
+
 </div>
 
 </div>
@@ -14058,54 +14247,72 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[38]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near</span><span class="p">(</span><span class="n">w2g</span><span class="p">,</span> <span class="n">w2</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b2g</span><span class="p">,</span> <span class="n">b2</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">w1g</span><span class="p">,</span> <span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b1g</span><span class="p">,</span> <span class="n">b1</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">ig</span><span class="p">,</span> <span class="n">x_train</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[38]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: -6.259815563680604e-06  STD: 1.0&#39;</pre>
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Module.forward()">Module.forward()<a class="anchor-link" href="#Module.forward()">&#182;</a></h2>
+
 </div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>When refactoring we should be on the lookout for redundant code or patterns of code that can be condensed and then reused.</p>
-<p>We'll start with a base class called <code>module</code> that all of our layers will inherit from. It will set up the <code>__call__</code> method to call a foward pass that needs to be implemented.</p>
-<p>This will give us an insight into how the Pytorch <code>nn.module</code> is structured.</p>
 
 </div>
 </div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[39]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Module</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span>
-    
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;not implemented&#39;</span><span class="p">)</span>
-        
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">bwd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Normalized X Input&#39;</span><span class="p">)</span>
+<span class="c1"># ax2.set_ylabel()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">x_valid</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+                      <span class="n">showmeans</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">showextrema</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14115,12 +14322,38 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[40]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Relu</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span> <span class="k">return</span> <span class="n">inp</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span> <span class="o">-</span><span class="mf">0.5</span>
-    <span class="k">def</span> <span class="nf">bwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span> <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Output&#39;</span><span class="p">)</span>
+<span class="c1"># ax2.set_ylabel()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">points</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">vert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">showmeans</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">showextrema</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14130,21 +14363,51 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[41]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Lin</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span>
-    
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span> <span class="k">return</span> <span class="n">inp</span><span class="nd">@self</span><span class="o">.</span><span class="n">w</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
-    
-    <span class="k">def</span> <span class="nf">bwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
-        <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">t</span><span class="p">()</span> 
-        <span class="c1"># Using Einsum we will speed up the backward pass</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bi,bj-&gt;ij&quot;</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="p">)</span> 
-        <span class="c1"># But its even faster if we do it this way</span>
-        <span class="c1">#self.w.g = inp.t() @ out.g</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x_valid</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">x_valid</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Normalized X Inputs&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[41]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Text(0.5, 1.0, &#39;Normalized X Inputs&#39;)</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14154,14 +14417,51 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[42]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Mse</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    
-    <span class="k">def</span> <span class="nf">bwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-        <span class="n">inp</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Activations after Relu&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[42]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Text(0.5, 1.0, &#39;Activations after Relu&#39;)</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14169,7 +14469,7 @@ loss: tensor(95.1825)
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This model is the same as before.</p>
+<p>Let's run some experiments here to find out what is going on with our activations after the relu</p>
 
 </div>
 </div>
@@ -14179,45 +14479,15 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[43]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Lin</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span><span class="n">b1</span><span class="p">),</span> <span class="n">Relu</span><span class="p">(),</span> <span class="n">Lin</span><span class="p">(</span><span class="n">w2</span><span class="p">,</span><span class="n">b2</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">Mse</span><span class="p">()</span>
-        
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">targ</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">targ</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span> <span class="n">l</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[44]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">b1</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">w2</span><span class="o">.</span><span class="n">g</span><span class="p">,</span><span class="n">b2</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[45]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> loss = model(x_train, y_train)
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mean</span><span class="p">,</span><span class="n">sqr</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">y</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="c1"># this is relu</span>
+    <span class="n">mean</span> <span class="o">+=</span> <span class="n">y</span>
+    <span class="n">sqr</span>  <span class="o">+=</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">mean</span><span class="o">/</span><span class="mi">10000</span><span class="p">,</span><span class="n">sqr</span><span class="o">/</span><span class="mi">10000</span>
 </pre></div>
 
     </div>
@@ -14230,13 +14500,15 @@ loss: tensor(95.1825)
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[43]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 32 ms
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.31970616111106875, 0.5201136677143094)</pre>
 </div>
+
 </div>
 
 </div>
@@ -14246,7 +14518,110 @@ loss: tensor(95.1825)
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The backward pass is much faster than above... WHY?</p>
+<p>The mean shifts up and the STD gets cut in half. This is simply the result of turning all the negative numbers into zeros.</p>
+<p>If we do the same experiment with the whole matrices we can the same thing happens.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[44]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mean</span><span class="p">,</span><span class="n">sqr</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">@</span> <span class="n">x</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">sqr</span>  <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="n">mean</span><span class="o">/</span><span class="mi">100</span><span class="p">,</span><span class="n">sqr</span><span class="o">/</span><span class="mi">100</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[44]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(9.103901314735413, 258.57692825317383)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Kaiming">Kaiming<a class="anchor-link" href="#Kaiming">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In order to counteract the effects of the relu we need a slighty different divisor - a new type of initialization.</p>
+<p>We'll use the <strong>Kaiming initialization</strong> which was first presented in <a href='https://arxiv.org/abs/1502.01852'>Delving Deep into Rectifiers </a></p>
+<p>
+$$\text{std} = \sqrt{\frac{2}{(1 + a^2) \times \text{fan_in}}}$$
+</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[45]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">m</span><span class="p">)</span>
+<span class="n">get_stats</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[45]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.00020451696764212102  STD: 0.050116606056690216&#39;</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see this effectively reduces our STD.</p>
+<p>Uses these weights in our first layer we get a slightly high mean but a STD closer to 1 which is what want.</p>
 
 </div>
 </div>
@@ -14256,7 +14631,8 @@ loss: tensor(95.1825)
 <div class="prompt input_prompt">In&nbsp;[46]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> model.backward()
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">))</span>
+<span class="n">get_stats</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14269,51 +14645,94 @@ loss: tensor(95.1825)
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[46]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 75 ms
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.4613212049007416  STD: 0.7358158230781555&#39;</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
 </div>
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's run a short experiment to see how this holds up over many iterations.</p>
 
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[47]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_near</span><span class="p">(</span><span class="n">w2g</span><span class="p">,</span> <span class="n">w2</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b2g</span><span class="p">,</span> <span class="n">b2</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">w1g</span><span class="p">,</span> <span class="n">w1</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">b1g</span><span class="p">,</span> <span class="n">b1</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
-<span class="n">test_near</span><span class="p">(</span><span class="n">ig</span><span class="p">,</span> <span class="n">x_train</span><span class="o">.</span><span class="n">g</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">mean</span><span class="p">,</span><span class="n">sqr</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">@</span> <span class="n">x</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="o">.</span><span class="mi">5</span>
+    <span class="n">mean</span> <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">sqr</span>  <span class="o">+=</span> <span class="n">y</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+<span class="n">mean</span><span class="o">/</span><span class="mi">100</span><span class="p">,</span><span class="n">sqr</span><span class="o">/</span><span class="mi">100</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="nn.Linear-and-nn.Module">nn.Linear and nn.Module<a class="anchor-link" href="#nn.Linear-and-nn.Module">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We're ready to use Pytorch's torch.nn.module</p>
-<p>This is what the docs say:</p>
+<div class="output_wrapper">
+<div class="output">
 
-<pre><code>`Base class for all neural network modules.
-Your models should also subclass this class.`</code></pre>
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[47]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.0633734999736771, 0.6833580589294433)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One small trick is to subtract .5 from the relu.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Pytorch-init">Pytorch init<a class="anchor-link" href="#Pytorch-init">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now that we have implemented Xavier and Kaiming (He) initialization methods from scratch we can use the Pytorch implementations.</p>
+
+<pre><code>Fills the input `Tensor` with values according to the method
+described in `Delving deep into rectifiers: Surpassing human-level
+performance on ImageNet classification` - He, K. et al. (2015), using a
+normal distribution.</code></pre>
 
 </div>
 </div>
@@ -14323,15 +14742,9 @@ Your models should also subclass this class.`</code></pre>
 <div class="prompt input_prompt">In&nbsp;[48]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_in</span><span class="p">,</span> <span class="n">nh</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nh</span><span class="p">,</span> <span class="n">n_out</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span>
-        
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span> <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">target</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">w1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nh</span><span class="p">)</span>
+<span class="n">init</span><span class="o">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;fan_out&quot;</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">relu</span><span class="p">(</span><span class="n">lin</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">w1</span><span class="p">,</span> <span class="n">b1</span><span class="p">))</span>
 </pre></div>
 
     </div>
@@ -14344,10 +14757,30 @@ Your models should also subclass this class.`</code></pre>
 <div class="prompt input_prompt">In&nbsp;[49]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">nh</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">w1</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[49]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: -0.0004057156329508871  STD: 0.05019932612776756&#39;</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14357,7 +14790,7 @@ Your models should also subclass this class.`</code></pre>
 <div class="prompt input_prompt">In&nbsp;[50]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> loss = model(x_train, y_train)
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_stats</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -14370,13 +14803,15 @@ Your models should also subclass this class.`</code></pre>
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[50]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 31 ms
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&#39;Mean: 0.5241668224334717  STD: 0.7693588137626648&#39;</pre>
 </div>
+
 </div>
 
 </div>
@@ -14385,48 +14820,23 @@ Your models should also subclass this class.`</code></pre>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[51]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> loss.backward()
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Wall time: 28 ms
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Export">Export<a class="anchor-link" href="#Export">&#182;</a></h3>
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[52]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>python notebook2script.py 02_fully_connected.ipynb
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>python notebook2script.py 01a_weight_init.ipynb
 </pre></div>
 
     </div>
@@ -14443,7 +14853,7 @@ Your models should also subclass this class.`</code></pre>
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Converted 02_fully_connected.ipynb to exp\nb_02.py
+<pre>Converted 01a_weight_init.ipynb to exp\nb_01a.py
 </pre>
 </div>
 </div>
