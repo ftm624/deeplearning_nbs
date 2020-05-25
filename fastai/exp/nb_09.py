@@ -11,37 +11,6 @@ from pathlib import Path
 
 Path.ls = lambda x: list(x.iterdir())
 
-image_extension = set(k for k,v in mimetypes.types_map.items() if v.startswith('image'))
-
-def setify(x): return x if isinstance(x, set) else set(listify(x))
-
-def _get_files(p, fs, extensions=None):
-    p = Path(p)
-    # path / filename  if it does not start with a '.' and (no extensions are given OR the suffix is in extensions)
-    res = [p/f for f in fs if not f.startswith('.') and ((not extensions) or f'.{f.split(".")[-1].lower()}' in extensions)]
-    return res
-
-
-def get_files(path, extensions=None, recurse=False, include=None):
-    path = Path(path)
-    extensions = setify(extensions)
-    extensions = {e.lower() for e in extensions}
-
-    if recurse:
-        res = []
-        #dirpath, dirnames, filenames
-        for i,(p,d,f) in enumerate(os.walk(path)):
-            if include is not None and i==0:
-                d[:] = [o for o in d if o in include]
-            else:
-                d[:] = [o for o in d if not o.startswith('.')]
-            res += _get_files(p, f, extensions)
-        return res
-
-    else:
-        f = [o.name for o in os.scandir(path) if o.is_file()]
-        return _get_files(path, f, extensions=extensions)
-
 def compose(x, funcs, *args, order_key="_order", **kwargs):
     key = lambda o: getattr(o, order_key, 0)
     for f in sorted(listify(funcs), key=key): x = f(x, **kwargs)
@@ -70,6 +39,36 @@ class ItemList(ListContainer):
         res = super().__getitem__(idx)
         if isinstance(res,list): return [self._get(o) for o in res]
         return self._get(res)
+
+image_extension = set(k for k,v in mimetypes.types_map.items() if v.startswith('image'))
+
+def setify(x): return x if isinstance(x, set) else set(listify(x))
+
+def _get_files(p, fs, extensions=None):
+    p = Path(p)
+    # path / filename  if it does not start with a '.' and (no extensions are given OR the suffix is in extensions)
+    res = [p/f for f in fs if not f.startswith('.') and ((not extensions) or f'.{f.split(".")[-1].lower()}' in extensions)]
+    return res
+
+def get_files(path, extensions=None, recurse=False, include=None):
+    path = Path(path)
+    extensions = setify(extensions)
+    extensions = {e.lower() for e in extensions}
+
+    if recurse:
+        res = []
+        #dirpath, dirnames, filenames
+        for i,(p,d,f) in enumerate(os.walk(path)):
+            if include is not None and i==0:
+                d[:] = [o for o in d if o in include]
+            else:
+                d[:] = [o for o in d if not o.startswith('.')]
+            res += _get_files(p, f, extensions)
+        return res
+
+    else:
+        f = [o.name for o in os.scandir(path) if o.is_file()]
+        return _get_files(path, f, extensions=extensions)
 
 class ImageList(ItemList):
     @classmethod
@@ -120,6 +119,9 @@ class SplitData():
     def __repr__(self):
         return f'{self.__class__.__name__}\nTrain: {self.train}\nValid: {self.valid}\n'
 
+class Processor():
+    def process(self, items):
+        return items
 
 from collections import OrderedDict
 
@@ -127,9 +129,6 @@ def uniqueify(x, sort=False):
     res = list(OrderedDict.fromkeys(x).keys())
     if sort: res.sort()
     return res
-
-class Processor():
-    def process(self, items): return items
 
 class CategoryProcesser(Processor):
     def __init__(self):
@@ -198,6 +197,58 @@ class LabeledData():
 
 
 def label_by_func(sd, f, proc_x=None, proc_y=None):
-    train = LabeledData.label_by_func(sd, f, proc_x=proc_x, proc_y=proc_y)
-    valid = LabeledData.label_by_func(sd, f, proc_x=proc_x, proc_y=proc_y)
+    train = LabeledData.label_by_func(sd.train, f, proc_x=proc_x, proc_y=proc_y)
+    valid = LabeledData.label_by_func(sd.valid, f, proc_x=proc_x, proc_y=proc_y)
     return SplitData(train, valid)
+
+class ResizeFixed(Transform):
+    _order = 10
+    def __init__(self, size):
+        if isinstance(size, int):
+            size=(size, size)
+        self.size = size
+
+    def __call__(self, item):
+        return item.resize(self.size, PIL.Image.BILINEAR)
+
+def to_byte_tensor(item):
+    res = torch.ByteTensor(torch.ByteStorage.from_buffer(item.tobytes()))
+    w,h = item.size
+    return res.view(h,w, -1).permute(2,0,1)
+
+to_byte_tensor._order = 20
+
+def to_float_tensor(item):
+    return item.float().div_(255.)
+
+to_float_tensor._order=30
+
+def show_image(im, figsize=(3,3)):
+    plt.figure(figsize=figsize)
+    plt.axis('off')
+    plt.imshow(im.permute(1,2,0))
+
+class DataBunch():
+    def __init__(self, train_dl, valid_dl, c_in=None, c_out=None):
+        self.train_dl, self.valid_dl = train_dl, valid_dl
+        self.c_in, self.c_out = c_in, c_out
+
+    @property
+    def train_ds(self): return self.train_dl.dataset
+
+    @property
+    def valid_ds(self): return self.valid_dl.dataset
+
+def databunchify(sd, bs, c_in=None, c_out=None, **kwargs):
+    train, valid = get_dls(sd.train, sd.valid, bs=bs, **kwargs)
+    return DataBunch(train, valid, c_in=c_in, c_out=c_out)
+
+SplitData.to_databunch = databunchify
+
+def normalize_chan(x, mean, std):
+    return (x-mean[...,None,None]) / std[...,None,None]
+
+_m = tensor([0.4419, 0.4332, 0.4166])
+_s = tensor([0.2732, 0.2724, 0.2971])
+
+norm_imagenette = partial(normalize_chan, mean=_m.cuda(), std=_s.cuda())
