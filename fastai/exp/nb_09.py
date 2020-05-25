@@ -4,7 +4,7 @@
 #################################################
 # file to edit: dev_nb/09_datablock.ipynb
 
-from exp.nb_08 import *
+from exp.nb_08a import *
 
 import PIL, os, mimetypes
 from pathlib import Path

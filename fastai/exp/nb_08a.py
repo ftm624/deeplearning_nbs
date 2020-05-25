@@ -19,3 +19,16 @@ def find_mods(m, func):
 def is_lin_layer(l):
     layers = (nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.Linear, nn.ReLU)
     return isinstance(l, layers)
+
+def lsuv_append_stat(hook, mod, inp, outp):
+    d = outp.data
+    hook.mean, hook.std = d.mean().item(), d.std().item()
+
+def lsuv_module(m, xb):
+    h = Hook(m, lsuv_append_stat)
+
+    while mdl(xb) is not None and abs(h.mean ) > 1e-3: m.bias -= h.mean
+    while mdl(xb) is not None and abs(h.std-1) > 1e-3: m.weight.data /= h.std
+
+    h.remove()
+    return h.mean, h.std

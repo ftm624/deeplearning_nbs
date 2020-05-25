@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>09a_bagoftricks</title>
+<title>10_optimizers</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13074,19 +13074,6 @@ div#notebook {
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
 
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Bag-of-Tricks">Bag of Tricks<a class="anchor-link" href="#Bag-of-Tricks">&#182;</a></h1><blockquote><p>Refinements and Improvements to CNN's for image classification</p>
-</blockquote>
-<p><a href="https://arxiv.org/abs/1812.01187">Bag of Tricks for Image Classification with Convolutional Neural Networks</a></p>
-<p>Tong He, Zhi Zhang, Hang Zhang, Zhongyue Zhang, Junyuan Xie, Mu Li</p>
-
-<pre><code>Much of the recent progress made in image classification research can be credited to training procedure refinements, such as changes in data augmentations and optimization methods. In the literature, however, most refinements are either briefly mentioned as implementation details or only visible in source code. In this paper, we will examine a collection of such refinements and empirically evaluate their impact on the final model accuracy through ablation study. We will show that, by combining these refinements together, we are able to improve various CNN models significantly. For example, we raise ResNet-50's top-1 validation accuracy from 75.3% to 79.29% on ImageNet. We will also demonstrate that improvement on image classification accuracy leads to better transfer learning performance in other application domains such as object detection and semantic segmentation.</code></pre>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
@@ -13102,13 +13089,20 @@ div#notebook {
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Optimizers">Optimizers<a class="anchor-link" href="#Optimizers">&#182;</a></h1>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="kn">from</span> <span class="nn">exp.nb_09</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">exp.nb_09a</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 
     </div>
@@ -13119,29 +13113,9 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h2>
+<h2 id="Data">Data<a class="anchor-link" href="#Data">&#182;</a></h2>
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Data-to-DataBunch">Data to DataBunch<a class="anchor-link" href="#Data-to-DataBunch">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">bs</span> <span class="o">=</span> <span class="mi">64</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -13150,6 +13124,8 @@ div#notebook {
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">untar_data</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">URLs</span><span class="o">.</span><span class="n">IMAGENETTE_160</span><span class="p">)</span> <span class="c1"># downloads and returns a path to folder</span>
 <span class="n">tfms</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_rgb</span><span class="p">,</span> <span class="n">ResizeFixed</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span> <span class="n">to_byte_tensor</span><span class="p">,</span> <span class="n">to_float_tensor</span><span class="p">]</span> <span class="c1"># transforms to be applied to images</span>
+
+<span class="n">bs</span> <span class="o">=</span> <span class="mi">128</span>
 
 <span class="n">il</span> <span class="o">=</span> <span class="n">ImageList</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tfms</span><span class="o">=</span><span class="n">tfms</span><span class="p">)</span> <span class="c1"># Imagelist from files</span>
 <span class="n">sd</span> <span class="o">=</span> <span class="n">SplitData</span><span class="o">.</span><span class="n">split_by_func</span><span class="p">(</span><span class="n">il</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">grandparent_splitter</span><span class="p">,</span> <span class="n">valid_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">))</span> <span class="c1"># Splitdata by function</span>
@@ -13162,160 +13138,27 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Callbacks">Callbacks<a class="anchor-link" href="#Callbacks">&#182;</a></h3>
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">),</span> 
-             <span class="n">CudaCallback</span><span class="p">,</span>
-             <span class="n">partial</span><span class="p">(</span><span class="n">BatchTransformXCallback</span><span class="p">,</span> <span class="n">norm_imagenette</span><span class="p">)]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nfs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">256</span><span class="p">]</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Model-Arch">Model Arch<a class="anchor-link" href="#Model-Arch">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We don't use a big conv 7x7 at first but three 3x3 convs, and don't go directly from 3 channels to 64 but progressively add those:</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nfs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">256</span><span class="p">]</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[7]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="k">def</span> <span class="nf">prev_pow_2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="mi">2</span><span class="o">**</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[8]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>2</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="k">def</span> <span class="nf">get_cnn_layers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    
-    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span> 
-        <span class="k">return</span> <span class="n">layer</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">ks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    
-    <span class="n">l1</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">c_in</span>
-    <span class="n">l2</span> <span class="o">=</span> <span class="n">prev_pow_2</span><span class="p">(</span><span class="n">l1</span><span class="o">*</span><span class="mi">3</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
-    
-    <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span>   <span class="n">l2</span><span class="p">,</span>   <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-              <span class="n">f</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span>   <span class="n">l2</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-              <span class="n">f</span><span class="p">(</span><span class="n">l2</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">l2</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)]</span>
-    <span class="n">nfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">l2</span><span class="o">*</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">nfs</span>
-    
-    <span class="n">layers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">nfs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">nfs</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nfs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
-    <span class="n">layers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveAvgPool2d</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">flatten</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">nfs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">c_out</span><span class="p">)]</span>
-    
-    <span class="k">return</span> <span class="n">layers</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="k">def</span> <span class="nf">get_cnn_model</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">get_cnn_layers</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
-
-<span class="k">def</span> <span class="nf">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">get_cnn_model</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">init_cnn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="n">uniform</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">get_runner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">cbs</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">opt_func</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">),</span>
+            <span class="n">CudaCallback</span><span class="p">,</span> 
+            <span class="n">partial</span><span class="p">(</span><span class="n">BatchTransformXCallback</span><span class="p">,</span> <span class="n">norm_imagenette</span><span class="p">)]</span>
 </pre></div>
 
     </div>
@@ -13328,30 +13171,25 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sched</span> <span class="o">=</span> <span class="n">combine_scheds</span><span class="p">([</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="n">cos_1cycle_anneal</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span><span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span>  <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Baseline single epoch validation accuracy with vanilla Stochastic Gradient Descent:</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="o">+</span><span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">ParamScheduler</span><span class="p">,</span> <span class="s1">&#39;lr&#39;</span><span class="p">,</span> <span class="n">sched</span><span class="p">)])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
@@ -13371,8 +13209,8 @@ div#notebook {
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>train: [1.730062820123561, tensor(0.4031, device=&#39;cuda:0&#39;)]
-valid: [1.3776530155254778, tensor(0.5465, device=&#39;cuda:0&#39;)]
+<pre>train: [1.7702564783768084, tensor(0.3910, device=&#39;cuda:0&#39;)]
+valid: [1.6495183121019108, tensor(0.4525, device=&#39;cuda:0&#39;)]
 </pre>
 </div>
 </div>
@@ -13384,221 +13222,16 @@ valid: [1.3776530155254778, tensor(0.5465, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>A function that would print out a summary of the layers and their activation shapes of our model would be very helpful.</p>
-<p>We can do this by using Hooks and sending batch through the model to print out what happens at every stage:</p>
-
+<h2 id="Refining-the-Optimizer">Refining the Optimizer<a class="anchor-link" href="#Refining-the-Optimizer">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="k">def</span> <span class="nf">model_summary</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">learn</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">find_all</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">get_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-    <span class="n">device</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span>
-    <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">yb</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">hf</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">hook</span><span class="p">,</span><span class="n">mod</span><span class="p">,</span><span class="n">inp</span><span class="p">,</span><span class="n">outp</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">mod</span><span class="si">}</span><span class="se">\n</span><span class="s1">Output:</span><span class="si">{</span><span class="n">outp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">mods</span> <span class="o">=</span> <span class="n">find_mods</span><span class="p">(</span><span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">is_lin_layer</span><span class="p">)</span> <span class="k">if</span> <span class="n">find_all</span> <span class="k">else</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">children</span><span class="p">()</span>
-    <span class="k">with</span> <span class="n">Hooks</span><span class="p">(</span><span class="n">mods</span><span class="p">,</span> <span class="n">hf</span><span class="p">)</span> <span class="k">as</span> <span class="n">hook</span><span class="p">:</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_summary</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">learn</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Sequential(
-  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 16, 128, 128])
-
-Sequential(
-  (0): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 32, 64, 64])
-
-Sequential(
-  (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 64, 32, 32])
-
-Sequential(
-  (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 64, 16, 16])
-
-Sequential(
-  (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 64, 8, 8])
-
-Sequential(
-  (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 128, 4, 4])
-
-Sequential(
-  (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
-  (1): GeneralRelu()
-  (2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-)
-Output:torch.Size([128, 256, 2, 2])
-
-AdaptiveAvgPool2d(output_size=1)
-Output:torch.Size([128, 256, 1, 1])
-
-Lambda()
-Output:torch.Size([128, 256])
-
-Linear(in_features=256, out_features=10, bias=True)
-Output:torch.Size([128, 10])
-
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Training">Training<a class="anchor-link" href="#Training">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> run.fit(5, learn)
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>train: [1.3123442697882564, tensor(0.5594, device=&#39;cuda:0&#39;)]
-valid: [1.5668453921178345, tensor(0.5029, device=&#39;cuda:0&#39;)]
-train: [1.2176354460938326, tensor(0.5961, device=&#39;cuda:0&#39;)]
-valid: [1.275376816281847, tensor(0.5735, device=&#39;cuda:0&#39;)]
-train: [0.8694145451605239, tensor(0.7151, device=&#39;cuda:0&#39;)]
-valid: [1.2902619924363057, tensor(0.5967, device=&#39;cuda:0&#39;)]
-train: [0.48882599634333085, tensor(0.8495, device=&#39;cuda:0&#39;)]
-valid: [1.1328984623805733, tensor(0.6566, device=&#39;cuda:0&#39;)]
-train: [0.2372632797648907, tensor(0.9434, device=&#39;cuda:0&#39;)]
-valid: [1.1539058767914012, tensor(0.6596, device=&#39;cuda:0&#39;)]
-Wall time: 1min 16s
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="LSUV-Init">LSUV Init<a class="anchor-link" href="#LSUV-Init">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's try our bag of tricks model with the LSUV initialization technique.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lsuv_module</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">mdl</span><span class="p">):</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">Hook</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">lsuv_append_stat</span><span class="p">)</span>
-    
-    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">mod</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">while</span> <span class="n">mdl</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">mean</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-3</span><span class="p">:</span> <span class="n">mod</span><span class="o">.</span><span class="n">bias</span> <span class="o">-=</span> <span class="n">h</span><span class="o">.</span><span class="n">mean</span>
-        <span class="k">while</span> <span class="n">mdl</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">std</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-3</span><span class="p">:</span> <span class="n">mod</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span> <span class="o">/=</span> <span class="n">h</span><span class="o">.</span><span class="n">std</span>
-
-    <span class="n">h</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">std</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">get_batch</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">,</span> <span class="n">run</span><span class="p">)</span>
-
-<span class="n">mods</span> <span class="o">=</span> <span class="n">find_mods</span><span class="p">(</span><span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">is_lin_layer</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mods</span><span class="p">:</span> <span class="n">lsuv_module</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>
@@ -13621,41 +13254,33 @@ Wall time: 1min 16s
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">time</span> run.fit(5, learn)
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>train: [0.4784115642161263, tensor(0.8919, device=&#39;cuda:0&#39;)]
-valid: [1.4449001044984076, tensor(0.5753, device=&#39;cuda:0&#39;)]
-train: [0.6862207949130056, tensor(0.7698, device=&#39;cuda:0&#39;)]
-valid: [1.4064058767914012, tensor(0.5992, device=&#39;cuda:0&#39;)]
-train: [0.3569653328047444, tensor(0.8857, device=&#39;cuda:0&#39;)]
-valid: [1.3306855841958598, tensor(0.6334, device=&#39;cuda:0&#39;)]
-train: [0.10578015885719189, tensor(0.9776, device=&#39;cuda:0&#39;)]
-valid: [1.2797096437101911, tensor(0.6548, device=&#39;cuda:0&#39;)]
-train: [0.036571728690950406, tensor(0.9977, device=&#39;cuda:0&#39;)]
-valid: [1.2824068222531848, tensor(0.6555, device=&#39;cuda:0&#39;)]
-Wall time: 1min 16s
-</pre>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Weight-Decay">Weight Decay<a class="anchor-link" href="#Weight-Decay">&#182;</a></h2>
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
 
+    </div>
 </div>
 </div>
 
@@ -13675,46 +13300,138 @@ Wall time: 1min 16s
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Momentum">Momentum<a class="anchor-link" href="#Momentum">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Adam">Adam<a class="anchor-link" href="#Adam">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Lamb">Lamb<a class="anchor-link" href="#Lamb">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">nb_auto_export</span><span class="p">()</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-
-
-
-<div id="238434a6-5d72-4d2d-9134-58be893c374f"></div>
-<div class="output_subarea output_javascript ">
-<script type="text/javascript">
-var element = $('#238434a6-5d72-4d2d-9134-58be893c374f');
-{
-const ip = IPython.notebook
-if (ip) {
-    ip.save_notebook()
-    console.log('a')
-    const s = `!python notebook2script.py ${ip.notebook_name}`
-    if (ip.kernel) { ip.kernel.execute(s) }
-}
-}
-</script>
-</div>
-
-</div>
-
 </div>
 </div>
 

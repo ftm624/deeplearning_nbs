@@ -6,7 +6,38 @@
 
 from exp.nb_09 import *
 
-def prev_pow_2(x): 2**math.floor(math.log2(x))
+def prev_pow_2(x): return 2**math.floor(math.log2(x))
 
 def get_cnn_layers(data, nfs, layer, **kwargs):
-    pass
+
+    def f(ni, nf, stride=2):
+        return layer(ni, nf, ks=3, stride=stride, **kwargs)
+
+    l1 = data.c_in
+    l2 = prev_pow_2(l1*3*3)
+
+    layers = [f(l1,   l2,   stride=1),
+              f(l2,   l2*2, stride=2),
+              f(l2*2, l2*4, stride=2)]
+    nfs = [l2*4] + nfs
+
+    layers += [f(nfs[i], nfs[i+1]) for i in range(len(nfs)-1)]
+    layers += [nn.AdaptiveAvgPool2d(1), Lambda(flatten), nn.Linear(nfs[-1], data.c_out)]
+
+    return layers
+
+def get_cnn_model(data, nfs, layer, **kwargs):
+    return nn.Sequential(*get_cnn_layers(data, nfs, layer, **kwargs))
+
+def get_learn_run(data, nfs, layer, lr, cbs=None, opt_func=None, uniform=False, **kwargs):
+    model = get_cnn_model(data, nfs, layer, **kwargs)
+    init_cnn(model, uniform=uniform)
+    return get_runner(model, data, lr=lr, cbs=cbs, opt_func=opt_func)
+
+def model_summary(run, learn, data, find_all=False):
+    xb, yb = get_batch(data.valid_dl, run)
+    device = next(learn.model.parameters()).device
+    xb, yb = xb.to(device), yb.to(device)
+    hf = lambda hook,mod,inp,outp: print(f'{mod}\nOutput:{outp.shape}\n')
+    mods = find_mods(learn.model, is_lin_layer) if find_all else learn.model.children()
+    with Hooks(mods, hf) as hook: learn.model(xb)
