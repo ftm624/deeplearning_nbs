@@ -12,10 +12,14 @@ from pathlib import Path
 Path.ls = lambda x: list(x.iterdir())
 
 def compose(x, funcs, *args, order_key="_order", **kwargs):
+    # ordering key
     key = lambda o: getattr(o, order_key, 0)
-    for f in sorted(listify(funcs), key=key): x = f(x, **kwargs)
-    return x
+    # iterate through ordered funcs
+    for f in sorted(listify(funcs), key=key):
+        # call each func passing the returned x each time
+        x = f(x, **kwargs)
 
+    return x
 
 class ItemList(ListContainer):
     def __init__(self, items, path='.', tfms=None):
@@ -25,12 +29,15 @@ class ItemList(ListContainer):
     def __repr__(self): # shows the first 10 items and then the path
         return f'{super().__repr__()}\nPath: {self.path}'
 
-    def new(self, items, cls=None): # will be used when we need to split the data later
-        if cls is None: cls=self.__class__
+    def new(self, items, cls=None):
+        # creates a new item with of the same class, path and tfms as its passed
+        # will be used when we need to split the data later
+        if cls is None:
+            cls=self.__class__
         return cls(items, self.path, tfms=self.tfms)
 
     def get(self, i):
-        return i
+        return i # subclasses will over ride
 
     def _get(self, i): # processing by transforms is done on the fly - when __getitem__ is called
         return compose(self.get(i), self.tfms)
@@ -101,15 +108,10 @@ def split_by_func(items, f):
     return tru, fal
 
 class SplitData():
-    def __init__(self, train, valid):
-        self.train = train
-        self.valid = valid
+    def __init__(self, train, valid): self.train, self.valid = train, valid
 
-    def __getattr__(self, k):
-        return getattr(self.train, k)
-
-    def __setstate__(self, data:Any):
-        self.__dict__.update(data)
+    def __getattr__(self, k): return getattr(self.train, k)
+    def __setstate__(self, data:Any): self.__dict__.update(data)
 
     @classmethod
     def split_by_func(cls, il, f):
