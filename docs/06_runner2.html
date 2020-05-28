@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>02a_convolutions</title>
+<title>06_runner2</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13070,6 +13070,28 @@ div#notebook {
     });
     </script>
     <!-- End of mathjax configuration --></head>
+
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.css">
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://rawgit.com/ipython-contrib/jupyter_contrib_nbextensions/master/src/jupyter_contrib_nbextensions/nbextensions/toc2/main.css">
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<script src="https://rawgit.com/ipython-contrib/jupyter_contrib_nbextensions/master/src/jupyter_contrib_nbextensions/nbextensions/toc2/toc2.js"></script>
+
+<script>
+$( document ).ready(function(){
+
+            var cfg = {"base_numbering": 1, "nav_menu": {}, "number_sections": true, "sideBar": true, "skip_h1_title": false, "title_cell": "Table of Contents", "title_sidebar": "Contents", "toc_cell": false, "toc_position": {}, "toc_section_display": true, "toc_window_display": false};
+
+            // fire the main function with these parameters
+            require(['nbextensions/toc2/toc2'], function (toc2) {
+                toc2.table_of_contents(cfg);
+            });
+    });
+</script>
 <body>
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
@@ -13092,20 +13114,25 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Convolutions-and-basics-of-CNNs">Convolutions and basics of CNNs<a class="anchor-link" href="#Convolutions-and-basics-of-CNNs">&#182;</a></h1><blockquote><p>How convolutions work</p>
+<h1 id="Runner-v2.0">Runner v2.0<a class="anchor-link" href="#Runner-v2.0">&#182;</a></h1><blockquote><p>Exception Control Flow</p>
 </blockquote>
+<p>We're now going to rework our Runner.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">exp.nb_07</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+
+<span class="kn">from</span> <span class="nn">exp.nb_05</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># import torch.nn.functional as F</span>
+<span class="c1"># import torch.nn as nn</span>
+<span class="c1"># import torch.optim as optim</span>
 </pre></div>
 
     </div>
@@ -13116,15 +13143,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Data">Data<a class="anchor-link" href="#Data">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's grab out MNIST dataset.</p>
-
+<h2 id="Get-Data">Get Data<a class="anchor-link" href="#Get-Data">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13133,7 +13152,11 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="p">,</span><span class="n">y_train</span><span class="p">,</span><span class="n">x_valid</span><span class="p">,</span><span class="n">y_valid</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">()</span>
+<span class="n">train_ds</span><span class="p">,</span><span class="n">valid_ds</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span><span class="n">Dataset</span><span class="p">(</span><span class="n">x_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)</span>
+<span class="n">nh</span><span class="p">,</span><span class="n">bs</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span><span class="mi">512</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span>
 </pre></div>
 
     </div>
@@ -13143,33 +13166,13 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">DataBunch</span><span class="p">(</span><span class="o">*</span><span class="n">get_dls</span><span class="p">(</span><span class="n">train_ds</span><span class="p">,</span> <span class="n">valid_ds</span><span class="p">,</span> <span class="n">bs</span><span class="p">),</span> <span class="n">c</span><span class="p">)</span>
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[6]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>torch.Size([50000, 784])</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13177,7 +13180,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Each row of the dataset is an image,</p>
+<h2 id="Callbacks">Callbacks<a class="anchor-link" href="#Callbacks">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Previously, our <code>Callback</code> parent class was</p>
 
 </div>
 </div>
@@ -13187,30 +13197,27 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export </span>
+<span class="k">class</span> <span class="nc">Callback</span><span class="p">():</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">def</span> <span class="nf">set_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span> <span class="o">=</span> <span class="n">run</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span> <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Callback$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">camel2snake</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;callback&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># new to Runner 2.0</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">):</span>
+        <span class="n">cb</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cb</span> <span class="ow">and</span> <span class="n">cb</span><span class="p">():</span> <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
 </pre></div>
 
     </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[5]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>torch.Size([784])</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
@@ -13218,8 +13225,78 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>But in order to properly view them we'll reshape them for now into rank 3 tensors:</p>
-<p><code>[channels, height, width]</code></p>
+<p>We're not altering the code for the <code>TrainEvalCallback</code> but now it is inheriting from our modified <code>Callback</code> parent</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export </span>
+<span class="k">class</span> <span class="nc">TrainEvalCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">after_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">+=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">iters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">begin_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">n_epochs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">in_train</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">begin_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="o">.</span><span class="n">in_train</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We will define three types of Exceptions that our new Runner will use to control the training loop:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">CancelTrainException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">CancelEpochException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">CancelBatchException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="k">pass</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Runner">Runner<a class="anchor-link" href="#Runner">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We're going to remove all of the <code>if self('some_method')</code> and instead just call our callbacks:</p>
 
 </div>
 </div>
@@ -13229,7 +13306,129 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">Runner</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cb_funcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">cbs</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">cbs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cbf</span> <span class="ow">in</span> <span class="n">listify</span><span class="p">(</span><span class="n">cb_funcs</span><span class="p">):</span>
+            <span class="n">cb</span> <span class="o">=</span> <span class="n">cbf</span><span class="p">()</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cb</span><span class="p">)</span>
+            <span class="n">cbs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cbs</span> <span class="o">=</span> <span class="p">[</span><span class="n">TrainEvalCallback</span><span class="p">()]</span><span class="o">+</span><span class="n">cbs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">opt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learn</span><span class="o">.</span><span class="n">opt</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learn</span><span class="o">.</span><span class="n">model</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loss_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learn</span><span class="o">.</span><span class="n">loss_func</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span><span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">learn</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">one_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yb</span> <span class="o">=</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;begin_batch&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xb</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_pred&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yb</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_loss&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span> <span class="c1"># exits if in validation mode</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_backward&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_step&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">CancelBatchException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_cancel_batch&#39;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_batch&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">all_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="n">dl</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_batch</span><span class="p">(</span><span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span> <span class="n">CancelEpochException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_cancel_epoch&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">learn</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="n">epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learn</span> <span class="o">=</span> <span class="n">learn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbs</span><span class="p">:</span> <span class="n">cb</span><span class="o">.</span><span class="n">set_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="c1"># passes self as the runner object to each callback</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s2">&quot;begin_fit&quot;</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;begin_epoch&#39;</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_batches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">train_dl</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;begin_validate&#39;</span><span class="p">):</span><span class="bp">self</span><span class="o">.</span><span class="n">all_batches</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">)</span>
+                <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_epoch&#39;</span><span class="p">)</span>
+
+        <span class="k">except</span><span class="p">:</span> <span class="n">CancelTrainException</span><span class="p">:</span> <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_cancel_train&#39;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">(</span><span class="s1">&#39;after_fit&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">learn</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb_name</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cbs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">_order</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">cb</span><span class="p">(</span><span class="n">cb_name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">res</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Other-Callbacks">Other Callbacks<a class="anchor-link" href="#Other-Callbacks">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="TestCallback">TestCallback<a class="anchor-link" href="#TestCallback">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We now have the ability to completely kill the training in mid-epoch if we reach a certain condition.</p>
+<p>This is done by simply raising the <code>CancelTrainException</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">TestCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">def</span> <span class="nf">after_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">:</span> <span class="k">raise</span> <span class="n">CancelTrainException</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span> <span class="o">=</span> <span class="n">create_learner</span><span class="p">(</span><span class="n">get_model</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13242,7 +13441,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">five</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">TestCallback</span><span class="p">())</span>
 </pre></div>
 
     </div>
@@ -13255,7 +13454,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">five</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13268,16 +13467,269 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[12]:</div>
+    <div class="prompt"></div>
 
 
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&lt;matplotlib.image.AxesImage at 0x2990cc70d30&gt;</pre>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre>
+</div>
 </div>
 
 </div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Recorder">Recorder<a class="anchor-link" href="#Recorder">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Adding in the recording lrs for multiple param groups. And a new plot function that plots the losses against the lrs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">Recorder</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lrs</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">after_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span> 
+        <span class="k">for</span> <span class="n">pg</span><span class="p">,</span><span class="n">lr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lrs</span><span class="p">):</span> <span class="n">lr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pg</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+        
+    <span class="k">def</span> <span class="nf">plot_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_last</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">)</span><span class="o">-</span><span class="n">slip_last</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">plot_lr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pgid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lrs</span><span class="p">[</span><span class="n">pgid</span><span class="p">])</span>
+    
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_last</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pgid</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">]</span>
+        <span class="n">lrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lrs</span><span class="p">[</span><span class="n">pgid</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span><span class="o">-</span><span class="n">skip_last</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lrs</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">losses</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Param-Scheduler">Param Scheduler<a class="anchor-link" href="#Param-Scheduler">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Again adding functionality to deal with multiple param groups.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">ParamScheduler</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">,</span> <span class="n">sched_funcs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pname</span> <span class="o">=</span> <span class="n">pname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span> <span class="o">=</span> <span class="n">sched_funcs</span>
+    
+    <span class="k">def</span> <span class="nf">begin_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">set_param</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span><span class="p">)</span> <span class="c1"># checking that begin_fit was called</span>
+        <span class="k">for</span> <span class="n">pg</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sched_funcs</span><span class="p">):</span>
+            <span class="n">pg</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pname</span><span class="p">]</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_epochs</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">)</span> <span class="c1"># call the schedule function with the current position</span>
+    
+    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_param</span><span class="p">()</span>
+            
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="LR-Finder">LR Finder<a class="anchor-link" href="#LR-Finder">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>LR Finder is supposed to help determine a suitable value for the learning rate.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">LR_Find</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="n">_order</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">min_lr</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="n">max_lr</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="n">max_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_lr</span> <span class="o">=</span> <span class="n">min_lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_lr</span> <span class="o">=</span> <span class="n">max_lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="mf">1e9</span>
+        
+    <span class="k">def</span> <span class="nf">begin_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span><span class="p">:</span> <span class="k">return</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_lr</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_lr</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">min_lr</span><span class="p">)</span> <span class="o">**</span> <span class="n">pos</span>
+        <span class="k">for</span> <span class="n">pg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">param_groups</span><span class="p">:</span> <span class="n">pg</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr</span>
+    
+    <span class="k">def</span> <span class="nf">after_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span><span class="o">&gt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span><span class="o">*</span><span class="mi">10</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CancelTrainException</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span> <span class="o">=</span> <span class="n">create_learner</span><span class="p">(</span><span class="n">get_model</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="AvgStats">AvgStats<a class="anchor-link" href="#AvgStats">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">AvgStatsCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_stats</span> <span class="o">=</span> <span class="n">AvgStats</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_stats</span> <span class="o">=</span> <span class="n">AvgStats</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">begin_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_stats</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_stats</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">after_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_stats</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_train</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_stats</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span> <span class="n">stats</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">after_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_stats</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_stats</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Test">Test<a class="anchor-link" href="#Test">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span> <span class="o">=</span> <span class="n">Runner</span><span class="p">(</span><span class="n">cb_funcs</span><span class="o">=</span><span class="p">[</span><span class="n">LR_Find</span><span class="p">,</span> <span class="n">Recorder</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">skip_last</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
 
 <div class="output_area">
 
@@ -13287,163 +13739,8 @@ div#notebook {
 
 
 <div class="output_png output_subarea ">
-<img src="data:image/png;base64,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
-"
+<img src="06_runner2_files/06_runner2_38_0.png"
 >
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Convolutions">Convolutions<a class="anchor-link" href="#Convolutions">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Kernel-from-Scratch">Kernel from Scratch<a class="anchor-link" href="#Kernel-from-Scratch">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's try to create a top edge detection kernel from scratch and convolve it over the image.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">([</span>
-    <span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">],</span>
-    <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="o">-</span><span class="mf">1.</span><span class="p">,],</span>
-    <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
-<span class="p">]);</span> <span class="n">k</span><span class="o">.</span><span class="n">shape</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[16]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>torch.Size([3, 3])</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Pytorch <code>F.conv2d</code> requires <code>[batch size, channels, height, width]</code> so we'll reshape using <code>view</code></p>
-<p>Then we can pass it into our <code>nn.Conv2d</code> with our kernel and since the <code>stride=1</code> the result will be a rank 3 tensor</p>
-<p>`[filters, channels, height, width]'</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">top</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">five</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">),</span> <span class="n">k</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[29]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">top</span><span class="o">.</span><span class="n">shape</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[29]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>torch.Size([1, 1, 26, 26])</pre>
 </div>
 
 </div>
@@ -13457,7 +13754,7 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_lr</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -13467,19 +13764,6 @@ div#notebook {
 <div class="output_wrapper">
 <div class="output">
 
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[21]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&lt;matplotlib.image.AxesImage at 0x2990d41e6a0&gt;</pre>
-</div>
-
-</div>
 
 <div class="output_area">
 
@@ -13489,8 +13773,7 @@ div#notebook {
 
 
 <div class="output_png output_subarea ">
-<img src="data:image/png;base64,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
-"
+<img src="06_runner2_files/06_runner2_39_0.png"
 >
 </div>
 
@@ -13500,20 +13783,12 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>And if we transpose our kernel it looks like it will detect edges on the leftside of an object.</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">k</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>python notebook2script.py 06_runner2.ipynb
 </pre></div>
 
     </div>
@@ -13523,443 +13798,21 @@ div#notebook {
 <div class="output_wrapper">
 <div class="output">
 
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[23]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>tensor([[ 1., -1.,  0.],
-        [ 1., -1.,  0.],
-        [ 1., -1.,  0.]])</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[27]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">left</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">five</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">),</span> <span class="n">k</span><span class="o">.</span><span class="n">t</span><span class="p">()[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[28]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[28]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&lt;matplotlib.image.AxesImage at 0x2990e0458e0&gt;</pre>
-</div>
-
-</div>
 
 <div class="output_area">
 
     <div class="prompt"></div>
 
 
-
-
-<div class="output_png output_subarea ">
-<img src="data:image/png;base64,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
-"
->
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Converted 06_runner2.ipynb to exp\nb_06.py
+</pre>
 </div>
-
 </div>
 
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>So how do this basic</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Adaptive-Average-Max-Pool">Adaptive Average Max Pool<a class="anchor-link" href="#Adaptive-Average-Max-Pool">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><code>F.adaptive_avg_pool2d</code></p>
-
-<pre><code>Applies a 2D adaptive average pooling over an input signal composed of several input planes.</code></pre>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">avg_pool_1d</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_avg_pool2d</span><span class="p">(</span><span class="n">feature_map</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">avg_pool_1d</span><span class="o">.</span><span class="n">shape</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">feature_map</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">avg_pool_1d</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Adaptive-Max-Pool">Adaptive Max Pool<a class="anchor-link" href="#Adaptive-Max-Pool">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>F.adaptive_max_pool2d</p>
-
-<pre><code>Applies a 2D adaptive max pooling over an input signal composed of several input planes.
-
-</code></pre>
-<p>Max pooling will return a tensor of the max of some specified shape.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">max_pool</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_max_pool2d</span><span class="p">(</span><span class="n">feature_map</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">max_pool</span><span class="o">.</span><span class="n">shape</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">feature_map</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">max_pool</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Pre-Trained-Model">Pre-Trained Model<a class="anchor-link" href="#Pre-Trained-Model">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's look at the activations of a pretrained model.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">fastai.vision</span> <span class="kn">import</span> <span class="o">*</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet34</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>To pass an image we need to: normalize, turn into a mini-batch, and put onto GPU</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p><strong>Resources</strong></p>
-<ul>
-<li><a href="https://distill.pub/2017/feature-visualization/">https://distill.pub/2017/feature-visualization/</a></li>
-<li><a href="https://brohrer.github.io/how_convolutional_neural_networks_work.html">https://brohrer.github.io/how_convolutional_neural_networks_work.html</a></li>
-<li><a href="http://www.cs.cornell.edu/courses/cs1114/2013sp/sections/S06_convolution.pdf">http://www.cs.cornell.edu/courses/cs1114/2013sp/sections/S06_convolution.pdf</a></li>
-<li><a href="https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md">https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md</a></li>
-<li><a href="https://openframeworks.cc/ofBook/chapters/image_processing_computer_vision.html">https://openframeworks.cc/ofBook/chapters/image_processing_computer_vision.html</a></li>
-<li><a href="https://medium.com/impactai/cnns-from-different-viewpoints-fab7f52d159c">https://medium.com/impactai/cnns-from-different-viewpoints-fab7f52d159c</a></li>
-</ul>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
