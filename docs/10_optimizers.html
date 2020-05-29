@@ -13084,7 +13084,7 @@ div#notebook {
 <script>
 $( document ).ready(function(){
 
-            var cfg = {"base_numbering": 1, "nav_menu": {}, "number_sections": true, "sideBar": true, "skip_h1_title": false, "title_cell": "Table of Contents", "title_sidebar": "Contents", "toc_cell": false, "toc_position": {}, "toc_section_display": true, "toc_window_display": false};
+            var cfg = {"base_numbering": 1, "nav_menu": {}, "number_sections": true, "sideBar": true, "skip_h1_title": false, "title_cell": "Table of Contents", "title_sidebar": "Contents", "toc_cell": false, "toc_position": {"height": "calc(100% - 180px)", "left": "10px", "top": "150px", "width": "273.067px"}, "toc_section_display": true, "toc_window_display": true};
 
             // fire the main function with these parameters
             require(['nbextensions/toc2/toc2'], function (toc2) {
@@ -13099,7 +13099,7 @@ $( document ).ready(function(){
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Optimizers">Optimizers<a class="anchor-link" href="#Optimizers">&#182;</a></h1><blockquote><p>All is one</p>
+<h1 id="Refining-the-Optimizer">Refining the Optimizer<a class="anchor-link" href="#Refining-the-Optimizer">&#182;</a></h1><blockquote><p>All is one</p>
 </blockquote>
 <p>We're going to replace the Pytorch Optim with a custom optimizer class that uses <code>steppers</code>.</p>
 <p>This will allow us to make one Optimizer that can do any type of step we want to define.</p>
@@ -13140,7 +13140,7 @@ $( document ).ready(function(){
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Imagenette-Data">Imagenette Data<a class="anchor-link" href="#Imagenette-Data">&#182;</a></h2>
+<h2 id="Imagenette-Data-&amp;-Baseline-Model">Imagenette Data &amp; Baseline Model<a class="anchor-link" href="#Imagenette-Data-&amp;-Baseline-Model">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -13151,11 +13151,9 @@ $( document ).ready(function(){
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">untar_data</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">URLs</span><span class="o">.</span><span class="n">IMAGENETTE_160</span><span class="p">)</span> <span class="c1"># downloads and returns a path to folder</span>
 <span class="n">tfms</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_rgb</span><span class="p">,</span> <span class="n">ResizeFixed</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span> <span class="n">to_byte_tensor</span><span class="p">,</span> <span class="n">to_float_tensor</span><span class="p">]</span> <span class="c1"># transforms to be applied to images</span>
-
 <span class="n">bs</span> <span class="o">=</span> <span class="mi">128</span>
-
-<span class="n">il</span> <span class="o">=</span> <span class="n">ImageList</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tfms</span><span class="o">=</span><span class="n">tfms</span><span class="p">)</span> <span class="c1"># Imagelist from files</span>
-<span class="n">sd</span> <span class="o">=</span> <span class="n">SplitData</span><span class="o">.</span><span class="n">split_by_func</span><span class="p">(</span><span class="n">il</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">grandparent_splitter</span><span class="p">,</span> <span class="n">valid_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">))</span> <span class="c1"># Splitdata by function</span>
+<span class="n">il</span> <span class="o">=</span> <span class="n">ImageList</span><span class="o">.</span><span class="n">from_files</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tfms</span><span class="o">=</span><span class="n">tfms</span><span class="p">)</span> <span class="c1"># Imagelist of filenames from path</span>
+<span class="n">sd</span> <span class="o">=</span> <span class="n">SplitData</span><span class="o">.</span><span class="n">split_by_func</span><span class="p">(</span><span class="n">il</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">grandparent_splitter</span><span class="p">,</span> <span class="n">valid_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">))</span> <span class="c1"># Splitdata by folder function</span>
 <span class="n">ll</span> <span class="o">=</span> <span class="n">label_by_func</span><span class="p">(</span><span class="n">sd</span><span class="p">,</span> <span class="n">parent_labeler</span><span class="p">,</span> <span class="n">proc_y</span><span class="o">=</span><span class="n">CategoryProcesser</span><span class="p">())</span> <span class="c1"># label the data by parent folder</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">ll</span><span class="o">.</span><span class="n">to_databunch</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">c_in</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">c_out</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
@@ -13206,14 +13204,6 @@ $( document ).ready(function(){
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Baseline single epoch validation accuracy with vanilla Stochastic Gradient Descent (SGD):</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
@@ -13236,8 +13226,8 @@ $( document ).ready(function(){
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>train: [1.7680847122848242, tensor(0.3930, device=&#39;cuda:0&#39;)]
-valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
+<pre>train: [1.7565843971116275, tensor(0.3893, device=&#39;cuda:0&#39;)]
+valid: [1.6632195461783439, tensor(0.4364, device=&#39;cuda:0&#39;)]
 </pre>
 </div>
 </div>
@@ -13249,17 +13239,96 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Refining-the-Optimizer">Refining the Optimizer<a class="anchor-link" href="#Refining-the-Optimizer">&#182;</a></h2>
+<p>Our baseline model using vanilla SGD gives us around 45% validation accuracy in one epoch.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>train: [1.319560044619284, tensor(0.5630, device=&#39;cuda:0&#39;)]
+valid: [1.3284424761146496, tensor(0.5575, device=&#39;cuda:0&#39;)]
+train: [1.03668477812467, tensor(0.6612, device=&#39;cuda:0&#39;)]
+valid: [1.4276872263136942, tensor(0.5320, device=&#39;cuda:0&#39;)]
+train: [0.8317880633514627, tensor(0.7274, device=&#39;cuda:0&#39;)]
+valid: [1.3523896546576433, tensor(0.5674, device=&#39;cuda:0&#39;)]
+train: [0.6142635879250713, tensor(0.8037, device=&#39;cuda:0&#39;)]
+valid: [1.3932671924761146, tensor(0.5916, device=&#39;cuda:0&#39;)]
+train: [0.42345117538150806, tensor(0.8688, device=&#39;cuda:0&#39;)]
+valid: [1.3458276522691084, tensor(0.6166, device=&#39;cuda:0&#39;)]
+train: [0.26514520140557346, tensor(0.9211, device=&#39;cuda:0&#39;)]
+valid: [1.4726103453423567, tensor(0.5924, device=&#39;cuda:0&#39;)]
+train: [0.12024039227099614, tensor(0.9749, device=&#39;cuda:0&#39;)]
+valid: [1.4713951781449044, tensor(0.6097, device=&#39;cuda:0&#39;)]
+train: [0.05983125729147415, tensor(0.9910, device=&#39;cuda:0&#39;)]
+valid: [1.4784240644904458, tensor(0.6283, device=&#39;cuda:0&#39;)]
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>If we train it a bit further we are up to 62% validation accuracy.</p>
+
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The <code>param_groups</code> is a list of lists:</p>
+<h2 id="SGD">SGD<a class="anchor-link" href="#SGD">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We're going to stop using the Pytorch <code>optim</code> and write an SGD optimizer from scratch.</p>
+<p>Then we'll take this basic optimizer structure and iterate on it to add different regularization and optimization algorithms.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Optimizer-class-v1">Optimizer class v1<a class="anchor-link" href="#Optimizer-class-v1">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The <code>Optimizer</code> class at its core will store a dictionary of parameters and hyper-parameters and apply a function to the parameters using the hyperparameters and some <code>stepper</code> function when <code>step</code> is called after each batch .</p>
+<p>Parameters will be stored in <code>param_groups</code> which is a list of lists:</p>
 <div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="p">[[</span><span class="n">pg1</span><span class="p">],</span> <span class="p">[</span><span class="n">pg2</span><span class="p">],</span> <span class="p">[</span><span class="n">pg3</span><span class="p">]]</span>
 </pre></div>
-<p>Each <code>param_group</code> will have a corresponding hyperparameter dictionary in the list <code>self.hyper</code>:</p>
+<p>And each <code>param_group</code> will have a corresponding hyper-parameter dictionary in the list <code>self.hyper</code>:</p>
 <div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">hyper</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span><span class="s1">&#39;wd&#39;</span><span class="p">:</span><span class="mf">0.</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;wd&#39;</span><span class="p">:</span><span class="mf">0.</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span><span class="s1">&#39;wd&#39;</span><span class="p">:</span><span class="mf">0.</span><span class="p">}]</span>
 </pre></div>
 
@@ -13268,7 +13337,7 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Optimizer</span><span class="p">():</span>
@@ -13303,14 +13372,14 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="SGD">SGD<a class="anchor-link" href="#SGD">&#182;</a></h3><p><strong>Step</strong>: Add the negative learning rate to the gradient of the parameter.</p>
+<h3 id="SGD-stepper">SGD stepper<a class="anchor-link" href="#SGD-stepper">&#182;</a></h3><p>Takes <code>p</code> a parameter and the <code>lr</code> hyperparameter, a scalar, and adds the gradient of the parameter multiplied by the negative learning rate.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -13326,7 +13395,7 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">opt_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">steppers</span><span class="o">=</span><span class="p">[</span><span class="n">sgd_step</span><span class="p">])</span>
@@ -13344,9 +13413,17 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We'll need to refactor some of our callbacks to work with the new optimzer</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -13409,14 +13486,15 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Recorder</code> will have to be re-written to work with this new optimizer. We had pulling everything from Pytorch's <code>opt.param_groups</code></p>
+<p><code>Recorder</code> will have to be re-written to work with this new optimizer. We had been pulling everything from Pytorch's <code>opt.param_groups</code>.</p>
+<p>Now to get the learning rate we access <code>self.opt.hypers</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -13448,14 +13526,15 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>ParamScheduler:</p>
+<p>The <code>ParamScheduler</code> now needs to go through all of our <code>self.opt.hypers</code> and apply its scheduler functions accordingly.</p>
+<p>Remember each Param we schedule gets a different <code>ParamScheduler</code> callback - so each one is only accessing one <code>self.pname</code> in <code>self.opt.hypers</code> at a time.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -13484,14 +13563,14 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Finally, <code>LR_Find</code>:</p>
+<p>Similarly, the <code>LR_Find</code> now needs to use <code>opt.param_groups</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -13522,12 +13601,19 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="SGD-Test">SGD Test<a class="anchor-link" href="#SGD-Test">&#182;</a></h3>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sched</span> <span class="o">=</span> <span class="n">combine_scheds</span><span class="p">([</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="n">sched_cos</span><span class="p">(</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">8</span><span class="p">),</span> <span class="n">sched_lin</span><span class="p">(</span><span class="o">.</span><span class="mi">8</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sched</span> <span class="o">=</span> <span class="n">combine_scheds</span><span class="p">([</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="n">sched_cos</span><span class="p">(</span><span class="o">.</span><span class="mi">3</span><span class="p">,</span> <span class="o">.</span><span class="mi">6</span><span class="p">),</span> <span class="n">sched_lin</span><span class="p">(</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)])</span>
 </pre></div>
 
     </div>
@@ -13537,7 +13623,7 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">),</span>
@@ -13552,7 +13638,7 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span>  <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">opt_func</span><span class="p">)</span>
@@ -13565,7 +13651,7 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
@@ -13585,8 +13671,8 @@ valid: [1.5259199591958599, tensor(0.4828, device=&#39;cuda:0&#39;)]
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Train: [1.8778, 0.3577]
-Valid: [1.482, 0.5052]
+<pre>Train: [1.8129, 0.3741]
+Valid: [1.5118, 0.4856]
 
 </pre>
 </div>
@@ -13598,7 +13684,7 @@ Valid: [1.482, 0.5052]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
@@ -13620,7 +13706,7 @@ Valid: [1.482, 0.5052]
 
 
 <div class="output_png output_subarea ">
-<img src="10_optimizers_files/10_optimizers_28_0.png"
+<img src="10_optimizers_files/10_optimizers_34_0.png"
 >
 </div>
 
@@ -13632,7 +13718,7 @@ Valid: [1.482, 0.5052]
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_lr</span><span class="p">()</span>
@@ -13654,10 +13740,418 @@ Valid: [1.482, 0.5052]
 
 
 <div class="output_png output_subarea ">
-<img src="10_optimizers_files/10_optimizers_29_0.png"
+<img src="10_optimizers_files/10_optimizers_35_0.png"
 >
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [1.3324, 0.554]
+Valid: [1.6937, 0.453]
+
+Train: [1.2083, 0.5976]
+Valid: [1.5231, 0.5292]
+
+Train: [1.002, 0.6698]
+Valid: [1.333, 0.5839]
+
+Train: [0.6864, 0.7737]
+Valid: [1.596, 0.5445]
+
+Train: [0.4136, 0.8687]
+Valid: [1.4621, 0.5768]
+
+Train: [0.1873, 0.9516]
+Valid: [1.3468, 0.6189]
+
+Train: [0.0729, 0.9898]
+Valid: [1.3567, 0.6285]
+
+Train: [0.0355, 0.9975]
+Valid: [1.3398, 0.6532]
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We get about the same validation accuracy.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_38_0.png"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Our loss has a step like quality to it. Each epoch the variance appears to be decreasing in</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Param-Groups">Param Groups<a class="anchor-link" href="#Param-Groups">&#182;</a></h3><p>Let's compare our model_summary to the <code>grad_params()</code> method of our Optimizer:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model_summary</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">learn</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Sequential(
+  (0): Conv2d(3, 16, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 16, 128, 128])
+
+Sequential(
+  (0): Conv2d(16, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 32, 64, 64])
+
+Sequential(
+  (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 64, 32, 32])
+
+Sequential(
+  (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 32, 16, 16])
+
+Sequential(
+  (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 64, 8, 8])
+
+Sequential(
+  (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 128, 4, 4])
+
+Sequential(
+  (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+  (1): GeneralRelu()
+  (2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+)
+Output:torch.Size([256, 256, 2, 2])
+
+AdaptiveAvgPool2d(output_size=1)
+Output:torch.Size([256, 256, 1, 1])
+
+Lambda()
+Output:torch.Size([256, 256])
+
+Linear(in_features=256, out_features=10, bias=True)
+Output:torch.Size([256, 10])
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gp</span> <span class="o">=</span> <span class="n">learn</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">grad_params</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[29]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>23</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Parameter and hyperparameter for the Conv2d layer of the first block:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[41]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">gp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[41]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(torch.Size([16, 3, 3, 3]), {&#39;lr&#39;: tensor(0.2009)})</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The next layer that has parameters would be the <code>BatchNorm2d</code> layer.</p>
+<p>It has two learnable parameters: <code>mults</code> ($\gamma$) and <code>adds</code> ($\beta$) from the BatchNorm nb:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[42]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[42]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(Parameter containing:
+ tensor([0.6138, 0.9998, 0.9536, 1.1152, 0.8297, 1.1275, 0.9216, 0.8007, 0.7794,
+         1.0044, 0.8322, 0.7611, 0.9389, 1.6529, 1.4474, 0.9847],
+        device=&#39;cuda:0&#39;, requires_grad=True),
+ {&#39;lr&#39;: tensor(0.2009)})</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[43]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">gp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[43]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(Parameter containing:
+ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
+          0.0768,  0.1556,  0.2296,  0.1877, -0.1660,  0.1395,  0.2107,  0.0453],
+        device=&#39;cuda:0&#39;, requires_grad=True),
+ {&#39;lr&#39;: tensor(0.2009)})</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[47]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Parameter containing:
+tensor([0.6138, 0.9998, 0.9536, 1.1152, 0.8297, 1.1275, 0.9216, 0.8007, 0.7794,
+        1.0044, 0.8322, 0.7611, 0.9389, 1.6529, 1.4474, 0.9847],
+       device=&#39;cuda:0&#39;, requires_grad=True)
+Parameter containing:
+tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
+         0.0768,  0.1556,  0.2296,  0.1877, -0.1660,  0.1395,  0.2107,  0.0453],
+       device=&#39;cuda:0&#39;, requires_grad=True)
+</pre>
+</div>
 </div>
 
 </div>
@@ -13674,49 +14168,36 @@ Valid: [1.482, 0.5052]
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Limiting our weights from growing too much is going to hinder the training of the model, but it will yield to a state where it generalizes better. Going back to the theory a little bit, weight decay (or just <code>wd</code>) is a parameter that controls that sum of squares we add to our loss:</p>
-<div class="highlight"><pre><span></span><span class="n">loss_with_wd</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">+</span> <span class="p">(</span><span class="n">wd</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</pre></div>
-<p>In practice though, it would be very inefficient (and maybe numerically unstable) to compute that big sum and add it to the loss. If you remember a little bit of high school math, the derivative of <code>p**2</code> with respect to <code>p</code> is <code>2*p</code>. So adding that big sum to our loss is exactly the same as doing:</p>
-<div class="highlight"><pre><span></span><span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">+=</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
-</pre></div>
-<p>for every weight in our model, which in the case of vanilla SGD is equivalent to updating the parameters with:</p>
-<div class="highlight"><pre><span></span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="n">lr</span><span class="o">*</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">+</span> <span class="n">wd</span><span class="o">*</span><span class="n">weight</span><span class="p">)</span>
-</pre></div>
-<p>This technique is called "weight decay", as each weight is decayed by a factor <code>lr * wd</code>, as it's shown in this last formula.</p>
-<p>This only works for standard SGD, as we have seen that with momentum, RMSProp and Adam, the update has some additional formulas around the gradient. In those cases, the formula that comes from L2 regularization:</p>
-<div class="highlight"><pre><span></span><span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">+=</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
-</pre></div>
-<p>is different than weight decay</p>
-<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
-</pre></div>
-<p>Most libraries use the first one, but as it was pointed out in <a href="https://arxiv.org/pdf/1711.05101.pdf">Decoupled Weight Regularization</a> by Ilya Loshchilov and Frank Hutter, it is better to use the second one with the Adam optimizer, which is why fastai made it its default.</p>
+<p>Now that we have SGD let's add some regularization.</p>
 
 </div>
 </div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
-<span class="k">def</span> <span class="nf">weight_decay</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">wd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">lr</span><span class="o">*</span><span class="n">wd</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">p</span>
-
-<span class="n">weight_decay</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">wd</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>L2 Regularization:</p>
+<h3 id="L2-Regularization">L2 Regularization<a class="anchor-link" href="#L2-Regularization">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>L2 regularization is a penalty term added to the loss in order to minimize the weights.</p>
+<p>It's generally $\lambda$ (the L2 parameter) multiplied by the sum of the weights squared:</p>
+<div class="highlight"><pre><span></span><span class="n">loss_with_L2</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">+</span> <span class="n">L2</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+<p>It is computationally inefficient to square and sum the weights for each batch and then add them to the loss and compute the gradients.</p>
+<p>Instead we can take the gradient of the weights and multiple it by a <em>weight decay</em> parameter <code>wd</code> (<code>L2</code> above) and add that to the gradient.</p>
+<p>These two equations are equivalent:</p>
+<div class="highlight"><pre><span></span><span class="n">loss_with_L2</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">+</span> <span class="p">(</span><span class="n">L2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">+=</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
+</pre></div>
+<p>Full update looks like this:</p>
+<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">+</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span>
+</pre></div>
+<p>We'll make a <code>l2_reg</code> stepper which uses the computationally more efficient way of adding the gradients times the <code>wd</code> parameter to the weight gradients:</p>
 
 </div>
 </div>
@@ -13739,12 +14220,61 @@ Valid: [1.482, 0.5052]
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Weight-Decay">Weight Decay<a class="anchor-link" href="#Weight-Decay">&#182;</a></h3><p>If we factor this further:</p>
+<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
+</pre></div>
+<p>This technique is called "weight decay", as each weight is decayed by a factor <code>lr * wd</code>.</p>
+<p>We will apply the <code>weight_decay</code> stepper before the <code>sgd_step</code>.</p>
+<p>Therefore, all the <code>weight_decay</code> stepper needs to do is return the parameter:</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">weight_decay</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">wd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lr</span><span class="o">*</span><span class="n">wd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span>
+
+<span class="n">weight_decay</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">wd</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="https://arxiv.org/pdf/1711.05101.pdf">Decoupled Weight Regularization</a> by Ilya Loshchilov and Frank Hutter, it is better to use the second one with the Adam optimizer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Optimizer-class-v2">Optimizer class v2<a class="anchor-link" href="#Optimizer-class-v2">&#182;</a></h3><p>Our next optimizer is nearly identical to the first but add in a function to collect the defaults of the steppers to the <code>self.hyper</code> list of default hyperparameter dictionaries</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">get_defaults</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s2">&quot;_defaults&quot;</span><span class="p">,</span> <span class="p">{})</span>
 </pre></div>
 
     </div>
@@ -13757,7 +14287,257 @@ Valid: [1.482, 0.5052]
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_defaults</span><span class="p">(</span><span class="n">sgd_step</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">maybe_update</span><span class="p">(</span><span class="n">steppers</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steppers</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">func</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dest</span><span class="p">:</span> <span class="n">dest</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">Optimizer</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">steppers</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steppers</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">steppers</span><span class="p">)</span>
+        <span class="n">maybe_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steppers</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hypers</span> <span class="o">=</span> <span class="p">[{</span><span class="o">**</span><span class="n">defaults</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">grad_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">hyper</span><span class="p">)</span> <span class="k">for</span> <span class="n">pg</span><span class="p">,</span> <span class="n">hyper</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hypers</span><span class="p">)</span> 
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pg</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">hyper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_params</span><span class="p">():</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">detach_</span><span class="p">()</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">hyper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_params</span><span class="p">():</span>
+            <span class="n">compose</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steppers</span><span class="p">,</span> <span class="o">**</span><span class="n">hyper</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Weight-Decay-Test">Weight Decay Test<a class="anchor-link" href="#Weight-Decay-Test">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="n">sgd_opt</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">steppers</span><span class="o">=</span><span class="p">[</span><span class="n">weight_decay</span><span class="p">,</span> <span class="n">sgd_step</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_opt</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Check defaults:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">opt</span> <span class="o">=</span> <span class="n">sgd_opt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">hypers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;wd&#39;</span><span class="p">],</span> <span class="mf">0.</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">hypers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;lr&#39;</span><span class="p">],</span> <span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It works as expected.</p>
+<p>If we change the default <code>wd</code> to <code>1e-4</code> its the value we find in the opt.hypers</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">opt</span> <span class="o">=</span> <span class="n">sgd_opt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">hypers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;wd&#39;</span><span class="p">],</span> <span class="mf">1e-4</span><span class="p">)</span>
+<span class="n">test_eq</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">hypers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;lr&#39;</span><span class="p">],</span> <span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we'll train with Weight Decay:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span><span class="n">accuracy</span><span class="p">),</span> <span class="n">CudaCallback</span><span class="p">,</span> 
+             <span class="n">partial</span><span class="p">(</span><span class="n">BatchTransformXCallback</span><span class="p">,</span> <span class="n">norm_imagenette</span><span class="p">),</span> 
+            <span class="n">Recorder</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">ParamScheduler</span><span class="p">,</span> <span class="s1">&#39;lr&#39;</span><span class="p">,</span> <span class="n">sched</span><span class="p">)]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Small weight decay of 0.0001</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">sgd_opt</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This improves our baseline by quite a bit but we would need to train more epochs to do a thorough comparison.</p>
+<p>Larger weight decay of 0.01</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">sgd_opt</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">))</span>
+<span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -13771,6 +14551,531 @@ Valid: [1.482, 0.5052]
 <h2 id="Momentum">Momentum<a class="anchor-link" href="#Momentum">&#182;</a></h2>
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we'll build a more generalized Optimizer that can hold a state.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">StatefulOptimizer</span><span class="p">(</span><span class="n">Optimizer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">steppers</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
+        <span class="n">maybe_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">steppers</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="p">{}</span>
+        
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">hyper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_params</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">maybe_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">stat</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">hyper</span><span class="p">)</span>
+            <span class="n">compose</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steppers</span><span class="p">,</span> <span class="o">**</span><span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">hyper</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>Stat</code> class</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">Stat</span><span class="p">():</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>AverageGrad</code> stat:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">AverageGrad</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mom</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;grad_avg&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)}</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">mom</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;grad_avg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="n">mom</span><span class="p">)</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Momentum step using the average:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">momentum_step</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">grad_avg</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="o">-</span><span class="n">lr</span><span class="p">,</span> <span class="n">grad_avg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sgd_mom_opt</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">StatefulOptimizer</span><span class="p">,</span> <span class="n">steppers</span><span class="o">=</span><span class="p">[</span><span class="n">momentum_step</span><span class="p">,</span> <span class="n">weight_decay</span><span class="p">],</span> <span class="n">stats</span><span class="o">=</span><span class="n">AverageGrad</span><span class="p">(),</span> <span class="n">wd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Momemtum with normalized batches:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_mom_opt</span><span class="p">)</span>
+<span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span><span class="n">accuracy</span><span class="p">),</span> <span class="n">CudaCallback</span><span class="p">,</span> 
+            <span class="n">Recorder</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">ParamScheduler</span><span class="p">,</span> <span class="s1">&#39;lr&#39;</span><span class="p">,</span> <span class="n">sched</span><span class="p">)]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_mom_opt</span><span class="p">)</span>
+<span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Momentum-experiments">Momentum experiments<a class="anchor-link" href="#Momentum-experiments">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In order to understand what momentum does to our gradients, let's start by creating some fake data and plotting some simple calculations.</p>
+<p><code>y</code> will be a tensor of 200 elements with a mean of 0.3</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.3</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>betas</code> is an array of 4 numbers between 0.5 and 0.99 we'll use for our beta value</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">betas</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And by plotting our y we can see how they are spread out.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><code>plot_mom</code> will create a figure with 4 subplots that each calculates a function given a beta value, an <code>avg</code> which it will find, an element from <code>y</code> and a <code>y</code> index number.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">plot_mom</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="c1"># create 4 subplots</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span> 
+    
+    <span class="c1"># for each subplot plot y and some res calculated by f</span>
+    <span class="k">for</span> <span class="n">beta</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">betas</span><span class="p">,</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">avg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">yi</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+            <span class="n">avg</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> 
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;beta=</span><span class="si">{</span><span class="n">beta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Regular-momentum">Regular momentum<a class="anchor-link" href="#Regular-momentum">&#182;</a></h4><p>Just add a fraction ($\beta$) of the average to the output:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom1</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">avg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">avg</span><span class="o">=</span><span class="n">yi</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">beta</span><span class="o">*</span><span class="n">avg</span> <span class="o">+</span> <span class="n">yi</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">res</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As the beta term increases, more and more of the average is added to the output.</p>
+<p>As this happens the scale of the output diverges from the data we're attempting to map to.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>When the <code>beta</code> term is too high we end up adding too much of the avg and our prediction shoots off - this can happen in training.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="EWMA-Momentum">EWMA Momentum<a class="anchor-link" href="#EWMA-Momentum">&#182;</a></h4><p>Instead of just taking the average, let's add a mixture of the previous signal and the current signal using an exponentially weighted moving average.</p>
+$$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lin_comb</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">beta</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">*</span><span class="n">x</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom2</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">avg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">avg</span><span class="o">=</span><span class="n">yi</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">lin_comb</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">res</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Mapping-to-function">Mapping to function<a class="anchor-link" href="#Mapping-to-function">&#182;</a></h4><p>Let's turn out <code>y</code> into a quadratic.</p>
+<p><code>x</code> is 200 evenly spaced numbers between -4 and 4</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We'll subtract 1 to flip the parabola. Divide by 3 to scale it. Add some random noise with a mean of 0.1</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's change the first term to be an outlier of 0.5. This will demonstrate how the EWMA is deformed by the first batch.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The first element biases the prediction, especially when the <code>beta</code> value is higher like 0.99. Too much of momentum's influence comes from this EWMA and if the first terms are off then it struggles to recover a good fit.</p>
+<p>And when the <code>beta</code> term is 0.9 the average is running behind - because momentum is adding the past steps to calculate where it should be going as the data moves in a direction it is slow to adjust.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><strong>Debiasing</strong></p>
+<p>We would like to correct this tendency of Momentum to get thrown off because of the early data.</p>
+<p>So we'll divide the average by a debiasing terms that corresponds to the sum of the coefficients in our moving average.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom3</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">avg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">avg</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">avg</span> <span class="o">=</span> <span class="n">lin_comb</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">avg</span><span class="p">,</span> <span class="n">avg</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">beta</span><span class="o">**</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom3</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
@@ -13805,12 +15110,203 @@ Valid: [1.482, 0.5052]
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Dampened debiased momentum</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adam-Stats:">Adam Stats:<a class="anchor-link" href="#Adam-Stats:">&#182;</a></h3>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">AverageGrad</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mom</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dampening</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dampening</span> <span class="o">=</span> <span class="n">dampening</span>
+        
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;grad_avg&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)}</span>
+    
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">mom</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;mom_damp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">mom</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dampening</span> <span class="k">else</span> <span class="mf">1.</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;grad_avg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="n">mom</span><span class="p">)</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;mom_damp&#39;</span><span class="p">],</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And the moving average of the gradients squared:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">AverageSqrGrad</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mom</span><span class="o">=</span><span class="mf">0.99</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dampening</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dampening</span> <span class="o">=</span> <span class="n">dampening</span>
+        
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;sqr_avg&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)}</span>
+    
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">sqr_mom</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;sqr_damp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">mom</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dampening</span> <span class="k">else</span> <span class="mf">1.</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;sqr_avg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="n">sqr_mom</span><span class="p">)</span><span class="o">.</span><span class="n">addcmul_</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;sqr_damp&#39;</span><span class="p">],</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And a <code>StepCount</code> stat:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">class</span> <span class="nc">StepCount</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;step&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">state</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">state</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adam-Step">Adam Step<a class="anchor-link" href="#Adam-Step">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Debiasing:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">debias</span><span class="p">(</span><span class="n">mom</span><span class="p">,</span> <span class="n">damp</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">damp</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">mom</span><span class="o">**</span><span class="n">step</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">mom</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Adam Step:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">adam_step</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">mom</span><span class="p">,</span> <span class="n">mom_damp</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">sqr_mom</span><span class="p">,</span> <span class="n">sqr_damp</span><span class="p">,</span> <span class="n">grad_avg</span><span class="p">,</span> <span class="n">sqr_avg</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">debias1</span> <span class="o">=</span> <span class="n">debias</span><span class="p">(</span>    <span class="n">mom</span><span class="p">,</span> <span class="n">mom_damp</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="n">debias2</span> <span class="o">=</span> <span class="n">debias</span><span class="p">(</span><span class="n">sqr_mom</span><span class="p">,</span> <span class="n">sqr_damp</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">addcdiv_</span><span class="p">(</span><span class="o">-</span><span class="n">lr</span><span class="o">/</span><span class="n">debias1</span><span class="p">,</span> <span class="n">grad_avg</span><span class="p">,</span> <span class="p">(</span><span class="n">sqr_avg</span><span class="o">/</span><span class="n">debias2</span><span class="p">)</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span>
+
+<span class="n">adam_step</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
+<span class="k">def</span> <span class="nf">adam_opt</span><span class="p">(</span><span class="n">xtra_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">StatefulOptimizer</span><span class="p">,</span> 
+                  <span class="n">steppers</span><span class="o">=</span><span class="p">[</span><span class="n">adam_step</span><span class="p">,</span> <span class="n">weight_decay</span><span class="p">]</span> <span class="o">+</span> <span class="n">listify</span><span class="p">(</span><span class="n">xtra_step</span><span class="p">),</span>
+                  <span class="n">stats</span><span class="o">=</span><span class="p">[</span><span class="n">AverageGrad</span><span class="p">(</span><span class="n">dampening</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">AverageSqrGrad</span><span class="p">(),</span> <span class="n">StepCount</span><span class="p">()],</span>
+                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">adam_opt</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -13883,6 +15379,19 @@ Valid: [1.482, 0.5052]
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">nb_auto_export</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
 </pre></div>
 
     </div>

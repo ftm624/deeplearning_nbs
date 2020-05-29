@@ -116,14 +116,72 @@ class LR_Find(Callback):
         if self.loss < self.best_loss:
             self.best_loss = self.loss
 
+def l2_reg(p, lr, wd, **kwargs):
+    p.grad.data.add_(wd, p.data) # scalar times parameter and then add to gradient
+    return p
+
+l2_reg._defaults = dict(wd=0.)
+
 def weight_decay(p, lr, wd, **kwargs):
-    p.data.mul_(1-lr*wd)
+    p.data.mul_(1 - lr*wd)
     return p
 
 weight_decay._defaults = dict(wd=0.)
 
-def l2_reg(p, lr, wd, **kwargs):
-    p.grad.data.add_(wd, p.data)
-    return p
+def get_defaults(d):
+    return getattr(d, "_defaults", {})
 
-l2_reg._defaults = dict(wd=0.)
+def maybe_update(steppers, dest, func):
+    for s in steppers:
+        for k,v in func(s).items():
+            if not k in dest: dest[k] = v
+
+class Optimizer():
+    def __init__(self, params, steppers, **defaults):
+        self.steppers = listify(steppers)
+        maybe_update(self.steppers, defaults, get_defaults)
+        self.param_groups = list(params)
+        if not isinstance(self.param_groups[0], list): self.param_groups = [self.param_groups]
+        self.hypers = [{**defaults} for p in self.param_groups]
+
+    def grad_params(self):
+        return [(p, hyper) for pg, hyper in zip(self.param_groups, self.hypers)
+                for p in pg if p.grad is not None]
+
+    def zero_grad(self):
+        for p, hyper in self.grad_params():
+            p.grad.detach_()
+            p.grad.zero_()
+
+    def step(self):
+        for p, hyper in self.grad_params():
+            compose(p, self.steppers, **hyper)
+
+sgd_opt = partial(Optimizer, steppers=[weight_decay, sgd_step])
+
+class StatefulOptimizer(Optimizer):
+    def __init__(self, params, steppers, stats=None, **defaults):
+        self.stats = listify(stats)
+        maybe_update(self.stats, defaults, get_defaults)
+        super().__init__(params, steppers, **defaults)
+        self.state = {}
+
+    def step(self):
+        for p, hyper in self.grad_params():
+            if p not in self.state:
+                self.state[p] = {}
+                maybe_update(self.stats, self.state[p], lambda o: o.init_state(p))
+            state = self.state[p]
+            for stat in self.stats:
+                state = stat.update(p, state, **hyper)
+            compose(p, self.steppers, **state, **hyper)
+            self.state[p] = state
+
+class Stat():
+    _defaults = {}
+    def init_state(self, p): raise NotImplementedError
+    def update(self, p, state, **kwargs): raise NotImplementedError
+
+def momentum_step(p, lr, grad_avg, **kwargs):
+    p.data.add_(-lr, grad_avg)
+    return p
