@@ -13084,7 +13084,7 @@ div#notebook {
 <script>
 $( document ).ready(function(){
 
-            var cfg = {"base_numbering": 1, "nav_menu": {}, "number_sections": true, "sideBar": true, "skip_h1_title": false, "title_cell": "Table of Contents", "title_sidebar": "Contents", "toc_cell": false, "toc_position": {"height": "calc(100% - 180px)", "left": "10px", "top": "150px", "width": "273.067px"}, "toc_section_display": true, "toc_window_display": true};
+            var cfg = {"base_numbering": 1, "nav_menu": {}, "number_sections": true, "sideBar": true, "skip_h1_title": false, "title_cell": "Table of Contents", "title_sidebar": "Contents", "toc_cell": false, "toc_position": {"height": "calc(100% - 180px)", "left": "10px", "top": "150px", "width": "270.825px"}, "toc_section_display": true, "toc_window_display": true};
 
             // fire the main function with these parameters
             require(['nbextensions/toc2/toc2'], function (toc2) {
@@ -14161,7 +14161,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Weight-Decay">Weight Decay<a class="anchor-link" href="#Weight-Decay">&#182;</a></h2>
+<h2 id="Regularization">Regularization<a class="anchor-link" href="#Regularization">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -14204,7 +14204,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[49]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14224,23 +14224,32 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Weight-Decay">Weight Decay<a class="anchor-link" href="#Weight-Decay">&#182;</a></h3><p>If we factor this further:</p>
-<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">grad</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span>
+<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">-</span> <span class="p">(</span><span class="n">lr</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">grad</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">lr</span> <span class="o">*</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span>
 </pre></div>
-<p>This technique is called "weight decay", as each weight is decayed by a factor <code>lr * wd</code>.</p>
-<p>We will apply the <code>weight_decay</code> stepper before the <code>sgd_step</code>.</p>
-<p>Therefore, all the <code>weight_decay</code> stepper needs to do is return the parameter:</p>
+<p>When we decay each weight by a factor <code>lr * wd</code>, it's called <strong>weight decay</strong></p>
+<p>The <code>weight_decay</code> stepper will be applied before the <code>sgd_step</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sgd_step</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="o">-</span><span class="n">lr</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span>
+</pre></div>
+<p>Therefore, all the <code>weight_decay</code> stepper needs to do is subtract <code>lr * wd * weights</code> from the weights.</p>
+<div class="highlight"><pre><span></span><span class="n">new_weight</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">-</span> <span class="n">lr</span> <span class="o">*</span> <span class="n">wd</span> <span class="o">*</span> <span class="n">weights</span>
+
+<span class="n">new_weight</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">lr</span><span class="o">*</span><span class="n">wd</span><span class="p">)</span>
+</pre></div>
+<p>Or multiple the weights by <code>1-lr*wd</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[50]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
 <span class="k">def</span> <span class="nf">weight_decay</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">wd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lr</span><span class="o">*</span><span class="n">wd</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lr</span><span class="o">*</span><span class="n">wd</span><span class="p">)</span> 
     <span class="k">return</span> <span class="n">p</span>
 
 <span class="n">weight_decay</span><span class="o">.</span><span class="n">_defaults</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">wd</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
@@ -14269,7 +14278,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[52]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14284,7 +14293,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[53]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_defaults</span><span class="p">(</span><span class="n">sgd_step</span><span class="p">)</span>
@@ -14294,10 +14303,30 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[53]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[54]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14314,17 +14343,18 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[55]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
 <span class="k">class</span> <span class="nc">Optimizer</span><span class="p">():</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">steppers</span><span class="p">,</span> <span class="o">**</span><span class="n">defaults</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">steppers</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">steppers</span><span class="p">)</span>
-        <span class="n">maybe_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steppers</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hypers</span> <span class="o">=</span> <span class="p">[{</span><span class="o">**</span><span class="n">defaults</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steppers</span> <span class="o">=</span> <span class="n">listify</span><span class="p">(</span><span class="n">steppers</span><span class="p">)</span> <span class="c1"># add stepper functions</span>
+        <span class="n">maybe_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steppers</span><span class="p">,</span> <span class="n">defaults</span><span class="p">,</span> <span class="n">get_defaults</span><span class="p">)</span> <span class="c1"># get defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hypers</span> <span class="o">=</span> <span class="p">[{</span><span class="o">**</span><span class="n">defaults</span><span class="p">}</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">]</span> <span class="c1"># make dict of hyper</span>
         
     <span class="k">def</span> <span class="nf">grad_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">hyper</span><span class="p">)</span> <span class="k">for</span> <span class="n">pg</span><span class="p">,</span> <span class="n">hyper</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hypers</span><span class="p">)</span> 
@@ -14354,7 +14384,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[56]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14368,7 +14398,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[57]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_opt</span><span class="p">)</span>
@@ -14389,7 +14419,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[58]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">learn</span><span class="o">.</span><span class="n">model</span>
@@ -14402,7 +14432,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[59]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">opt</span> <span class="o">=</span> <span class="n">sgd_opt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
@@ -14426,7 +14456,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[60]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">opt</span> <span class="o">=</span> <span class="n">sgd_opt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
@@ -14449,7 +14479,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[61]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span><span class="n">accuracy</span><span class="p">),</span> <span class="n">CudaCallback</span><span class="p">,</span> 
@@ -14472,7 +14502,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[70]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">sgd_opt</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">))</span>
@@ -14485,26 +14515,88 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[71]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [1.7847, 0.3846]
+Valid: [1.6144, 0.4507]
+
+Train: [1.4308, 0.5202]
+Valid: [1.5701, 0.4843]
+
+Train: [1.2488, 0.5856]
+Valid: [1.6436, 0.4943]
+
+Train: [1.0398, 0.6558]
+Valid: [1.4036, 0.5518]
+
+Train: [0.5838, 0.8178]
+Valid: [1.1246, 0.6456]
+
+Train: [0.4596, 0.8598]
+Valid: [1.3878, 0.5931]
+
+Train: [0.5138, 0.8323]
+Valid: [1.5332, 0.5682]
+
+Train: [0.5362, 0.8231]
+Valid: [1.7157, 0.5689]
+
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[72]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_77_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14512,35 +14604,97 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This improves our baseline by quite a bit but we would need to train more epochs to do a thorough comparison.</p>
-<p>Larger weight decay of 0.01</p>
+<p>Its interesting that after epoch 5 the validation loss starts fluctuating and increasing.</p>
+<p>Now let's try a larger weight decay of 0.01</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[73]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">sgd_opt</span><span class="p">,</span> <span class="n">wd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">))</span>
-<span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
+<span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [1.8234, 0.3618]
+Valid: [1.84, 0.3901]
+
+Train: [1.4833, 0.503]
+Valid: [1.7285, 0.4168]
+
+Train: [1.392, 0.5406]
+Valid: [1.547, 0.4927]
+
+Train: [1.2592, 0.5909]
+Valid: [1.5746, 0.4741]
+
+Train: [0.9228, 0.7161]
+Valid: [1.3172, 0.5618]
+
+Train: [0.9599, 0.6922]
+Valid: [1.7325, 0.4446]
+
+Train: [1.122, 0.6447]
+Valid: [1.5807, 0.4734]
+
+Train: [1.116, 0.6408]
+Valid: [1.6423, 0.4578]
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[74]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_80_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14555,14 +14709,21 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now we'll build a more generalized Optimizer that can hold a state.</p>
+<p>Momentum helps to accelerate SGD and dampen oscillations.</p>
+<p>The update is pretty simple:</p>
+$$\begin{align} 
+\begin{split} 
+v_t &amp;= \gamma v_{t-1} + \eta \nabla_\theta J( \theta) \\ 
+\theta &amp;= \theta - v_t 
+\end{split} 
+\end{align}$$<p>For momentum we need our Optimizer to be able to hold a state - namely, the exponentially decaying average of the gradients.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[68]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14593,21 +14754,23 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>Stat</code> class</p>
+<p><code>Stat</code> abstract base class: two methods need to be implemented by user.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[69]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
 <span class="k">class</span> <span class="nc">Stat</span><span class="p">():</span>
     <span class="n">_defaults</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">init_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span> 
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </pre></div>
 
     </div>
@@ -14625,7 +14788,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[75]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">AverageGrad</span><span class="p">(</span><span class="n">Stat</span><span class="p">):</span>
@@ -14645,14 +14808,14 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Momentum step using the average:</p>
+<p>Momentum step:</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[76]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -14668,7 +14831,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[77]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">sgd_mom_opt</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">StatefulOptimizer</span><span class="p">,</span> <span class="n">steppers</span><span class="o">=</span><span class="p">[</span><span class="n">momentum_step</span><span class="p">,</span> <span class="n">weight_decay</span><span class="p">],</span> <span class="n">stats</span><span class="o">=</span><span class="n">AverageGrad</span><span class="p">(),</span> <span class="n">wd</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
@@ -14689,7 +14852,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[78]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_mom_opt</span><span class="p">)</span>
@@ -14700,10 +14863,38 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [2.1856, 0.2856]
+Valid: [1.9288, 0.3218]
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And without normalized batches:</p>
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[79]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial</span><span class="p">(</span><span class="n">AvgStatsCallback</span><span class="p">,</span><span class="n">accuracy</span><span class="p">),</span> <span class="n">CudaCallback</span><span class="p">,</span> 
@@ -14717,7 +14908,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[80]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">sgd_mom_opt</span><span class="p">)</span>
@@ -14725,6 +14916,60 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [2.0915, 0.3169]
+Valid: [1.9612, 0.3363]
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[81]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">recorder</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_96_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14747,7 +14992,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[82]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.3</span> 
@@ -14768,7 +15013,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[83]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">betas</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">]</span>
@@ -14789,13 +15034,34 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[84]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_103_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14810,7 +15076,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[85]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">plot_mom</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
@@ -14844,7 +15110,7 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[86]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom1</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
@@ -14869,13 +15135,34 @@ tensor([ 0.1193,  0.0069, -0.3453,  0.3296,  0.0519,  0.1793,  0.1601, -0.0094,
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[87]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom1</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_109_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14898,7 +15185,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[88]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">lin_comb</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
@@ -14912,7 +15199,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[89]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom2</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
@@ -14928,13 +15215,34 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[90]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom2</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_114_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -14950,7 +15258,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[91]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
@@ -14971,7 +15279,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[92]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
@@ -14984,13 +15292,34 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[93]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_119_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -15005,7 +15334,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[94]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
@@ -15018,13 +15347,34 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[95]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom2</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_122_0.png"
+>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -15050,7 +15400,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[96]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">mom3</span><span class="p">(</span><span class="n">avg</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
@@ -15066,7 +15416,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[97]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_mom</span><span class="p">(</span><span class="n">mom3</span><span class="p">)</span>
@@ -15076,32 +15426,34 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
-    </div>
-</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="10_optimizers_files/10_optimizers_126_0.png"
+>
 </div>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
 
-    </div>
 </div>
 </div>
 
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+
+</div>
+</div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
@@ -15113,8 +15465,21 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Dampened debiased momentum</p>
-
+<p>Adaptive Moment Estimation from the paper: <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a></p>
+<p>Adam stores two moving averages:</p>
+<ol>
+<li>The exponentially decaying average of the past gradients, like momentum (mean, first moment).</li>
+</ol>
+$$ m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t $$<ol>
+<li>The exponentially decaying average of the past squared gradients (variance, the second moment).</li>
+</ol>
+$$ v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 $$<p>And then to debias these:</p>
+$$\begin{align} 
+\begin{split} 
+\hat{m}_t &amp;= \dfrac{m_t}{1 - \beta^t_1} \\ 
+\hat{v}_t &amp;= \dfrac{v_t}{1 - \beta^t_2} \end{split} 
+\end{align}$$<p>The update rule is as follows:</p>
+$$ \theta_{t+1} = \theta_{t} - \dfrac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$
 </div>
 </div>
 </div>
@@ -15125,9 +15490,17 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In order to compute $m_t$ above we need an <code>AverageGrad</code> stat</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[98]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15154,14 +15527,14 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>And the moving average of the gradients squared:</p>
+<p>And the compute $v_t$ we need an <code>AverageSqrGrad</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[99]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15195,7 +15568,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[100]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15223,13 +15596,17 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Debiasing:</p>
-
+$$ \begin{align} 
+\begin{split} 
+\hat{m}_t &amp;= \dfrac{m_t}{1 - \beta^t_1} \\ 
+\hat{v}_t &amp;= \dfrac{v_t}{1 - \beta^t_2} \end{split} 
+\end{align}$$
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[101]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15245,14 +15622,21 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Adam Step:</p>
-
+<p>Adam step calculates the debiased exponentially decaying averages and it is just the update rule above:</p>
+$$ \theta_{t+1} = \theta_{t} - \dfrac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+$$ \text{p.data}_i = \text{p.data}_i + -\text{lr} \times \frac{\text{tensor1}_i}{\text{tensor2}_i}$$
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[103]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15272,7 +15656,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[104]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#export</span>
@@ -15290,7 +15674,7 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[105]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">learn</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">get_learn_run</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nfs</span><span class="p">,</span> <span class="n">conv_layer</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">cbs</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">opt_func</span><span class="o">=</span><span class="n">adam_opt</span><span class="p">())</span>
@@ -15303,13 +15687,39 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[106]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">run</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">learn</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Train: [2.3569, 0.0781]
+Valid: [2.3078, 0.1001]
+
+Train: [2.2974, 0.125]
+Valid: [2.305, 0.1004]
+
+Train: [2.3116, 0.1094]
+Valid: [2.3042, 0.1017]
+
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -15334,18 +15744,12 @@ $$ S_i = \beta S_{i-1} + (\beta -1)x_i$$
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 
-    </div>
 </div>
 </div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
